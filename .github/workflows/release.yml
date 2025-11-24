@@ -35,29 +35,11 @@ jobs:
           git tag "v${{ steps.version.outputs.VERSION }}"
           git push origin "v${{ steps.version.outputs.VERSION }}"
 
-  build:
+  release:
     needs: create-tag
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            goos: darwin
-            goarch: arm64
-            build_id: sercha-darwin-arm64
-          - os: macos-15-large
-            goos: darwin
-            goarch: amd64
-            build_id: sercha-darwin-amd64
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-            build_id: sercha-linux-amd64
-          - os: ubuntu-24.04-arm
-            goos: linux
-            goarch: arm64
-            build_id: sercha-linux-arm64
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/goreleaser/goreleaser-cross:latest
 
     steps:
       - uses: actions/checkout@v4
@@ -65,74 +47,8 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.25"
-
-      - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          install-only: true
-
-      - name: Build
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: goreleaser build --single-target --id ${{ matrix.build_id }} --clean
-
-      - name: Create archive
-        run: |
-          VERSION=${{ needs.create-tag.outputs.version }}
-          ARCHIVE_NAME="sercha_${VERSION}_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz"
-
-          # Find the built binary
-          BINARY_DIR=$(find dist -type d -name "${{ matrix.build_id }}*" | head -1)
-
-          # Create tar.gz with binary and extra files
-          tar -czvf "dist/${ARCHIVE_NAME}" \
-            -C "${BINARY_DIR}" sercha \
-            -C "${{ github.workspace }}" LICENSE README.md
-
-          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/*.tar.gz
-          retention-days: 1
-
-  release:
-    needs: [create-tag, build]
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Prepare release assets
-        run: |
-          mkdir -p release-assets
-          find artifacts -name "*.tar.gz" -exec cp {} release-assets/ \;
-
-          # Create checksums
-          cd release-assets
-          sha256sum *.tar.gz > checksums.txt
-
-          ls -la
-
-      - name: Create GitHub Release
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${{ needs.create-tag.outputs.version }}
-          TAG=${{ needs.create-tag.outputs.tag }}
-
-          gh release create "${TAG}" \
-            --title "v${VERSION}" \
-            --generate-notes \
-            release-assets/*
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: goreleaser release --clean

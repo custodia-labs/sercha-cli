@@ -15,32 +15,52 @@ builds:
     binary: sercha
     goos: [darwin]
     goarch: [amd64]
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
     ldflags:
       - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
 
   - id: sercha-darwin-arm64
     main: ./cmd/sercha/main.go
     binary: sercha
     goos: [darwin]
     goarch: [arm64]
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
     ldflags:
       - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
 
   - id: sercha-linux-amd64
     main: ./cmd/sercha/main.go
     binary: sercha
     goos: [linux]
     goarch: [amd64]
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
     ldflags:
       - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
 
   - id: sercha-linux-arm64
     main: ./cmd/sercha/main.go
     binary: sercha
     goos: [linux]
     goarch: [arm64]
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
     ldflags:
       - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
 
 # NEW: modern archive config
 archives:
