@@ -1,0 +1,101 @@
+version: 2
+
+project_name: sercha
+
+env:
+  - CGO_ENABLED=1
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: sercha-darwin-amd64
+    main: ./cmd/sercha/main.go
+    binary: sercha
+    goos: [darwin]
+    goarch: [amd64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+  - id: sercha-darwin-arm64
+    main: ./cmd/sercha/main.go
+    binary: sercha
+    goos: [darwin]
+    goarch: [arm64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+  - id: sercha-linux-amd64
+    main: ./cmd/sercha/main.go
+    binary: sercha
+    goos: [linux]
+    goarch: [amd64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+  - id: sercha-linux-arm64
+    main: ./cmd/sercha/main.go
+    binary: sercha
+    goos: [linux]
+    goarch: [arm64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+# NEW: modern archive config
+archives:
+  - id: archive
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+
+homebrew_casks:
+  - name: sercha
+    repository:
+      owner: custodia-labs
+      name: homebrew-sercha
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    commit_author:
+      name: "Sercha Bot"
+      email: "bot@custodialabs.com"
+    description: "Sercha CLI"
+    homepage: "https://github.com/custodia-labs/sercha-cli"
+    binaries:
+      - sercha
+
+nfpms:
+  - id: linux_pkgs
+    package_name: sercha
+    maintainer: "Gurushey Deo <you@example.com>"
+    description: "Sercha CLI"
+    homepage: "https://github.com/custodia-labs/sercha-cli"
+    license: MIT
+    formats: [deb, rpm]
+    bindir: /usr/bin
+
+# Cloudsmith upload via custom publisher (v2-compatible)
+publishers:
+  - name: upload-deb-to-cloudsmith
+    ids: [linux_pkgs]
+    cmd: cloudsmith push deb custodia-labs/sercha {{ .ArtifactPath }}
+    extra_files:
+      - glob: ./dist/*.deb
+
+  - name: upload-rpm-to-cloudsmith
+    ids: [linux_pkgs]
+    cmd: cloudsmith push rpm custodia-labs/sercha {{ .ArtifactPath }}
+    extra_files:
+      - glob: ./dist/*.rpm
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+
+changelog:
+  use: github
+
+release:
+  github:
+    owner: custodia-labs
+    name: sercha-cli

@@ -1,0 +1,26 @@
+#!/bin/sh
+# Conventional Commits validation hook
+# Install: cp .github/hooks/commit-msg .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
+
+pattern="^(feat|fix|docs|style|refactor|perf|test|chore)(\([a-zA-Z0-9._-]+\))?(!)?: .+$"
+message=$(cat "$1")
+
+# Skip merge commits
+if echo "$message" | grep -q "^Merge"; then
+  exit 0
+fi
+
+# Validate commit message
+if ! echo "$message" | head -1 | grep -Eq "$pattern"; then
+  echo ""
+  echo "Commit message does not follow Conventional Commits format."
+  echo ""
+  echo "Expected: type(scope): summary"
+  echo "Example:  feat(cli): add search subcommand"
+  echo ""
+  echo "Types: feat, fix, docs, style, refactor, perf, test, chore"
+  echo ""
+  echo "Your message: $(echo "$message" | head -1)"
+  echo ""
+  exit 1
+fi

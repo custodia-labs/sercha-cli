@@ -1,0 +1,20 @@
+# <type>(<scope>): <summary>
+#
+# Types: feat, fix, docs, style, refactor, perf, test, chore
+# Scope: cli, parser, config, build, deps, etc.
+# Summary: imperative mood, no period, max 72 chars
+#
+# Example: feat(cli): add search subcommand
+
+# Why is this change needed?
+
+
+# What changes were made?
+
+
+# Breaking Changes (if any):
+# -
+
+# Issue References:
+# Resolves: #
+# Related: #
