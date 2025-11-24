@@ -47,6 +47,9 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
+      - name: Fix git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
