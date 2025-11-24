@@ -38,10 +38,11 @@
 
 ## Post-Merge
 
-After this PR is merged:
+After this PR is merged, `release.yml` will automatically:
 
-1. `tag-on-version-change.yml` will create git tag `vX.Y.Z`
-2. `release.yml` will build and publish:
+1. Create and push git tag `vX.Y.Z`
+2. Build binaries for all platforms
+3. Publish:
    - GitHub Release
    - Homebrew cask
    - Cloudsmith packages
