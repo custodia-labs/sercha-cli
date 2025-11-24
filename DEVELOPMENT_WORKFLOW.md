@@ -175,16 +175,16 @@ Releases are fully automated through GitHub Actions.
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Bump        │ --> │ Create PR   │ --> │ Merge to    │ --> │ Auto-tag    │
-│ VERSION     │     │ (release    │     │ main        │     │ created     │
-│             │     │ template)   │     │             │     │             │
+│ Bump        │ --> │ Create PR   │ --> │ Merge to    │ --> │ Release     │
+│ VERSION     │     │ (release    │     │ main        │     │ workflow    │
+│             │     │ template)   │     │             │     │ triggered   │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
                                                                    │
                                                                    v
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Users       │ <-- │ Packages    │ <-- │ GoReleaser  │ <-- │ Release     │
-│ install     │     │ published   │     │ builds      │     │ workflow    │
-│             │     │             │     │             │     │ triggered   │
+│ Users       │ <-- │ Packages    │ <-- │ GoReleaser  │ <-- │ Tag created │
+│ install     │     │ published   │     │ builds      │     │ & pushed    │
+│             │     │             │     │             │     │             │
 └─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
@@ -207,16 +207,10 @@ Releases are fully automated through GitHub Actions.
 
    Once approved, merge the PR to `main`.
 
-4. **Automatic Tag Creation**
+4. **Automated Release Pipeline**
 
-   The `tag-on-version-change.yml` workflow:
-   - Detects VERSION file change
-   - Creates git tag `v1.2.0`
-   - Pushes tag to repository
-
-5. **GoReleaser Builds**
-
-   The `release.yml` workflow:
+   The `release.yml` workflow automatically:
+   - Creates git tag `v1.2.0` and pushes it
    - Builds binaries for all platforms (darwin/linux × amd64/arm64)
    - Creates GitHub Release with assets
    - Publishes Homebrew cask
