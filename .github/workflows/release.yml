@@ -44,7 +44,7 @@ jobs:
             goos: darwin
             goarch: arm64
             build_id: sercha-darwin-arm64
-          - os: macos-13
+          - os: macos-15-large
             goos: darwin
             goarch: amd64
             build_id: sercha-darwin-amd64
@@ -78,7 +78,7 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-        run: goreleaser build --single-target --id ${{ matrix.build_id }} --snapshot --clean
+        run: goreleaser build --single-target --id ${{ matrix.build_id }} --clean --split
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -124,4 +124,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: goreleaser release --clean --skip=build
+        run: goreleaser continue --merge
