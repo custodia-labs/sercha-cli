@@ -78,13 +78,28 @@ jobs:
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-        run: goreleaser build --single-target --id ${{ matrix.build_id }} --clean --split
+        run: goreleaser build --single-target --id ${{ matrix.build_id }} --clean
 
-      - name: Upload artifacts
+      - name: Create archive
+        run: |
+          VERSION=${{ needs.create-tag.outputs.version }}
+          ARCHIVE_NAME="sercha_${VERSION}_${{ matrix.goos }}_${{ matrix.goarch }}.tar.gz"
+
+          # Find the built binary
+          BINARY_DIR=$(find dist -type d -name "${{ matrix.build_id }}*" | head -1)
+
+          # Create tar.gz with binary and extra files
+          tar -czvf "dist/${ARCHIVE_NAME}" \
+            -C "${BINARY_DIR}" sercha \
+            -C "${{ github.workspace }}" LICENSE README.md
+
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/
+          name: ${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*.tar.gz
           retention-days: 1
 
   release:
@@ -93,35 +108,31 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.create-tag.outputs.tag }}
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: "1.25"
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist-artifacts
-          pattern: dist-*
+          path: artifacts
 
-      - name: Merge artifacts
+      - name: Prepare release assets
         run: |
-          mkdir -p dist
-          for dir in dist-artifacts/dist-*/; do
-            cp -r "$dir"* dist/ 2>/dev/null || true
-          done
-          ls -la dist/
+          mkdir -p release-assets
+          find artifacts -name "*.tar.gz" -exec cp {} release-assets/ \;
 
-      - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          install-only: true
+          # Create checksums
+          cd release-assets
+          sha256sum *.tar.gz > checksums.txt
 
-      - name: Release
+          ls -la
+
+      - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: goreleaser continue --merge
+        run: |
+          VERSION=${{ needs.create-tag.outputs.version }}
+          TAG=${{ needs.create-tag.outputs.tag }}
+
+          gh release create "${TAG}" \
+            --title "v${VERSION}" \
+            --generate-notes \
+            release-assets/*
