@@ -120,12 +120,16 @@ publishers:
   - name: upload-deb-to-cloudsmith
     ids: [linux_pkgs]
     cmd: cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
+    env:
+      - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
     extra_files:
       - glob: ./dist/*.deb
 
   - name: upload-rpm-to-cloudsmith
     ids: [linux_pkgs]
     cmd: cloudsmith push rpm custodia-labs/sercha/el/9 {{ .ArtifactPath }}
+    env:
+      - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
     extra_files:
       - glob: ./dist/*.rpm
 
