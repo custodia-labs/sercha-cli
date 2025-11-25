@@ -16,6 +16,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
       tag: ${{ steps.version.outputs.TAG }}
+      sha_short: ${{ steps.sha.outputs.SHA_SHORT }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,6 +29,11 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Get short SHA
+        id: sha
+        run: |
+          echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Create and push tag
         run: |
           git config user.name "github-actions[bot]"
@@ -38,32 +44,31 @@ jobs:
   build-linux:
     needs: create-tag
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/goreleaser/goreleaser-cross:latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
-      - name: Fix git safe directory
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
 
-      - name: Build Linux partials
+      - name: Build Linux
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --split --id linux-amd64 --id linux-arm64
+          args: release --clean --split
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
 
-      - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
+      - name: Cache Linux artifacts
+        uses: actions/cache/save@v4
         with:
-          name: linux-artifacts
-          path: dist/*
-          retention-days: 1
+          path: dist/linux
+          key: linux-${{ needs.create-tag.outputs.sha_short }}
 
   build-macos:
     needs: create-tag
@@ -79,21 +84,20 @@ jobs:
         with:
           go-version: "1.25"
 
-      - name: Build macOS partials
+      - name: Build macOS
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --split --id darwin-amd64 --id darwin-arm64
+          args: release --clean --split
         env:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
 
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
+      - name: Cache macOS artifacts
+        uses: actions/cache/save@v4
         with:
-          name: macos-artifacts
-          path: dist/*
-          retention-days: 1
+          path: dist/darwin
+          key: darwin-${{ needs.create-tag.outputs.sha_short }}
 
   release:
     needs: [create-tag, build-linux, build-macos]
@@ -104,17 +108,22 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
-      - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          name: linux-artifacts
-          path: dist
+          go-version: "1.25"
 
-      - name: Download macOS artifacts
-        uses: actions/download-artifact@v4
+      - name: Restore Linux artifacts
+        uses: actions/cache/restore@v4
         with:
-          name: macos-artifacts
-          path: dist
+          path: dist/linux
+          key: linux-${{ needs.create-tag.outputs.sha_short }}
+
+      - name: Restore macOS artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: dist/darwin
+          key: darwin-${{ needs.create-tag.outputs.sha_short }}
 
       - name: Install Cloudsmith CLI
         run: |
@@ -125,7 +134,7 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --merge
+          args: continue --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_GITHUB_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
