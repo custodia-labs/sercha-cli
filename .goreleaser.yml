@@ -107,31 +107,34 @@ homebrew_casks:
       - sercha
 
 nfpms:
-  - id: linux_pkgs
+  - id: deb_pkgs
     package_name: sercha
     maintainer: "Gurushey Deo <you@example.com>"
     description: "Sercha CLI"
     homepage: "https://github.com/custodia-labs/sercha-cli"
     license: MIT
-    formats: [deb, rpm]
+    formats: [deb]
+    bindir: /usr/bin
+
+  - id: rpm_pkgs
+    package_name: sercha
+    maintainer: "Gurushey Deo <you@example.com>"
+    description: "Sercha CLI"
+    homepage: "https://github.com/custodia-labs/sercha-cli"
+    license: MIT
+    formats: [rpm]
     bindir: /usr/bin
 
 publishers:
   - name: upload-deb-to-cloudsmith
-    ids: [linux_pkgs]
-    cmd: |
-      if [[ "{{ .ArtifactPath }}" == *.deb ]]; then
-        cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
-      fi
+    ids: [deb_pkgs]
+    cmd: cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
     env:
       - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
 
   - name: upload-rpm-to-cloudsmith
-    ids: [linux_pkgs]
-    cmd: |
-      if [[ "{{ .ArtifactPath }}" == *.rpm ]]; then
-        cloudsmith push rpm custodia-labs/sercha/el/9 {{ .ArtifactPath }}
-      fi
+    ids: [rpm_pkgs]
+    cmd: cloudsmith push rpm custodia-labs/sercha/el/9 {{ .ArtifactPath }}
     env:
       - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
 
