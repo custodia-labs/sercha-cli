@@ -86,13 +86,6 @@ nfpms:
     license: MIT
     formats: [deb]
     bindir: /usr/bin
-    deb:
-      distributions:
-        - jammy
-        - noble
-      architectures:
-        - amd64
-        - arm64
 
   - id: rpm_pkgs
     package_name: sercha
