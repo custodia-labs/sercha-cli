@@ -83,7 +83,7 @@ nfpms:
     maintainer: "Gurushey Deo <gurushey.deo@custodialabs.com>"
     description: "Sercha CLI"
     homepage: "https://github.com/custodia-labs/sercha-cli"
-    license: MIT
+    license: Apache-2.0
     formats: [deb]
     bindir: /usr/bin
 
@@ -92,7 +92,7 @@ nfpms:
     maintainer: "Gurushey Deo <gurushey.deo@custodialabs.com>"
     description: "Sercha CLI"
     homepage: "https://github.com/custodia-labs/sercha-cli"
-    license: MIT
+    license: Apache-2.0
     formats: [rpm]
     bindir: /usr/bin
 
