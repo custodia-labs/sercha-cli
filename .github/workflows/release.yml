@@ -35,12 +35,11 @@ jobs:
           git tag "v${{ steps.version.outputs.VERSION }}"
           git push origin "v${{ steps.version.outputs.VERSION }}"
 
-  release:
+  build-linux:
     needs: create-tag
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/goreleaser/goreleaser-cross:latest
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,15 +49,85 @@ jobs:
       - name: Fix git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: Build Linux partials
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: release --split --id linux-amd64 --id linux-arm64
+        env:
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: dist/*
+          retention-days: 1
+
+  build-macos:
+    needs: create-tag
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.create-tag.outputs.tag }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Build macOS partials
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: release --split --id darwin-amd64 --id darwin-arm64
+        env:
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifacts
+          path: dist/*
+          retention-days: 1
+
+  release:
+    needs: [create-tag, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.create-tag.outputs.tag }}
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifacts
+          path: dist
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-artifacts
+          path: dist
+
       - name: Install Cloudsmith CLI
         run: |
-          apt-get update -qq
-          apt-get install -y -qq python3-pip
-          pip3 install --break-system-packages -q cloudsmith-cli
+          pip3 install --break-system-packages cloudsmith-cli
 
-      - name: Release
+      - name: Merge and release
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser-pro
+          version: "~> v2"
+          args: release --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_GITHUB_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: goreleaser release --clean
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
