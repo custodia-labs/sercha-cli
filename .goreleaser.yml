@@ -76,7 +76,7 @@ homebrew_casks:
     repository:
       owner: custodia-labs
       name: homebrew-sercha
-      token: "{{ .Env.GITHUB_TOKEN }}"
+      token: "{{ .Env.HOMEBREW_GITHUB_TOKEN }}"
     commit_author:
       name: "Sercha Bot"
       email: "bot@custodialabs.com"

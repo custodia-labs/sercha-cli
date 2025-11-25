@@ -50,8 +50,15 @@ jobs:
       - name: Fix git safe directory
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: Install Cloudsmith CLI
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq python3-pip
+          pip3 install --break-system-packages -q cloudsmith-cli
+
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_GITHUB_TOKEN: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: goreleaser release --clean
