@@ -119,19 +119,21 @@ nfpms:
 publishers:
   - name: upload-deb-to-cloudsmith
     ids: [linux_pkgs]
-    cmd: cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
+    cmd: |
+      if [[ "{{ .ArtifactPath }}" == *.deb ]]; then
+        cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
+      fi
     env:
       - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
-    extra_files:
-      - glob: ./dist/*.deb
 
   - name: upload-rpm-to-cloudsmith
     ids: [linux_pkgs]
-    cmd: cloudsmith push rpm custodia-labs/sercha/el/9 {{ .ArtifactPath }}
+    cmd: |
+      if [[ "{{ .ArtifactPath }}" == *.rpm ]]; then
+        cloudsmith push rpm custodia-labs/sercha/el/9 {{ .ArtifactPath }}
+      fi
     env:
       - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
-    extra_files:
-      - glob: ./dist/*.rpm
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
