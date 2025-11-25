@@ -63,35 +63,6 @@ archives:
       - LICENSE
       - README.md
 
-# Code signing configuration - uncomment when ready
-# signs:
-#   - id: macos
-#     ids:
-#       - darwin-amd64
-#       - darwin-arm64
-#     signature: "${artifact}.sig"
-#     cmd: codesign
-#     args:
-#       - --sign
-#       - "Developer ID Application: YOUR_TEAM_NAME"
-#       - --timestamp
-#       - --options
-#       - runtime
-#       - --entitlements
-#       - signing/entitlements.plist
-#       - --verbose
-#       - "${artifact}"
-#     artifacts: binary
-
-# Notarization configuration - uncomment when ready
-# notarize:
-#   macos:
-#     enabled: true
-#     sign: macos
-#     ids:
-#       - darwin-amd64
-#       - darwin-arm64
-
 homebrew_casks:
   - name: sercha
     repository:
@@ -115,6 +86,13 @@ nfpms:
     license: MIT
     formats: [deb]
     bindir: /usr/bin
+    deb:
+      distributions:
+        - jammy
+        - noble
+      architectures:
+        - amd64
+        - arm64
 
   - id: rpm_pkgs
     package_name: sercha
@@ -126,9 +104,15 @@ nfpms:
     bindir: /usr/bin
 
 publishers:
-  - name: upload-deb-to-cloudsmith
+  - name: upload-deb-jammy
     ids: [deb_pkgs]
     cmd: cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
+    env:
+      - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
+
+  - name: upload-deb-noble
+    ids: [deb_pkgs]
+    cmd: cloudsmith push deb custodia-labs/sercha/ubuntu/noble {{ .ArtifactPath }}
     env:
       - CLOUDSMITH_API_KEY={{ .Env.CLOUDSMITH_API_KEY }}
 
