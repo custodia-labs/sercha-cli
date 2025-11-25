@@ -10,33 +10,7 @@ before:
     - go mod tidy
 
 builds:
-  - id: sercha-darwin-amd64
-    main: ./cmd/sercha/main.go
-    binary: sercha
-    goos: [darwin]
-    goarch: [amd64]
-    env:
-      - CC=o64-clang
-      - CXX=o64-clang++
-    ldflags:
-      - -s -w -X main.version={{.Version}}
-    flags:
-      - -trimpath
-
-  - id: sercha-darwin-arm64
-    main: ./cmd/sercha/main.go
-    binary: sercha
-    goos: [darwin]
-    goarch: [arm64]
-    env:
-      - CC=oa64-clang
-      - CXX=oa64-clang++
-    ldflags:
-      - -s -w -X main.version={{.Version}}
-    flags:
-      - -trimpath
-
-  - id: sercha-linux-amd64
+  - id: linux-amd64
     main: ./cmd/sercha/main.go
     binary: sercha
     goos: [linux]
@@ -49,7 +23,7 @@ builds:
     flags:
       - -trimpath
 
-  - id: sercha-linux-arm64
+  - id: linux-arm64
     main: ./cmd/sercha/main.go
     binary: sercha
     goos: [linux]
@@ -62,14 +36,61 @@ builds:
     flags:
       - -trimpath
 
-# NEW: modern archive config
+  - id: darwin-amd64
+    main: ./cmd/sercha/main.go
+    binary: sercha
+    goos: [darwin]
+    goarch: [amd64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
+
+  - id: darwin-arm64
+    main: ./cmd/sercha/main.go
+    binary: sercha
+    goos: [darwin]
+    goarch: [arm64]
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    flags:
+      - -trimpath
+
 archives:
   - id: archive
-    formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
       - LICENSE
       - README.md
+
+# Code signing configuration - uncomment when ready
+# signs:
+#   - id: macos
+#     ids:
+#       - darwin-amd64
+#       - darwin-arm64
+#     signature: "${artifact}.sig"
+#     cmd: codesign
+#     args:
+#       - --sign
+#       - "Developer ID Application: YOUR_TEAM_NAME"
+#       - --timestamp
+#       - --options
+#       - runtime
+#       - --entitlements
+#       - signing/entitlements.plist
+#       - --verbose
+#       - "${artifact}"
+#     artifacts: binary
+
+# Notarization configuration - uncomment when ready
+# notarize:
+#   macos:
+#     enabled: true
+#     sign: macos
+#     ids:
+#       - darwin-amd64
+#       - darwin-arm64
 
 homebrew_casks:
   - name: sercha
@@ -95,17 +116,16 @@ nfpms:
     formats: [deb, rpm]
     bindir: /usr/bin
 
-# Cloudsmith upload via custom publisher (v2-compatible)
 publishers:
   - name: upload-deb-to-cloudsmith
     ids: [linux_pkgs]
-    cmd: cloudsmith push deb custodia-labs/sercha {{ .ArtifactPath }}
+    cmd: cloudsmith push deb custodia-labs/sercha/ubuntu/jammy {{ .ArtifactPath }}
     extra_files:
       - glob: ./dist/*.deb
 
   - name: upload-rpm-to-cloudsmith
     ids: [linux_pkgs]
-    cmd: cloudsmith push rpm custodia-labs/sercha {{ .ArtifactPath }}
+    cmd: cloudsmith push rpm custodia-labs/sercha/el/9 {{ .ArtifactPath }}
     extra_files:
       - glob: ./dist/*.rpm
 
@@ -114,6 +134,21 @@ checksum:
 
 changelog:
   use: github
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Others
+      order: 999
 
 release:
   github:
