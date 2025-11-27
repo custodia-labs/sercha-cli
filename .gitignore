@@ -35,3 +35,6 @@ go.work.sum
 # Build artifacts
 dist/
 sercha
+.claude/
+*/.DS_Store
+.DS_Store

@@ -2,6 +2,8 @@
 <a id="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
+<p align="center">
+
 [![GitHub Release][release-shield]][release-url]
 [![License][license-shield]][license-url]
 [![Go Report Card][goreport-shield]][goreport-url]
@@ -9,10 +11,15 @@
 [![CI Workflow][ci-workflow-shield]][ci-workflow-url]
 [![Contributions Welcome][contributions-shield]][contributions-url]
 
+</p>
+
+<!-- BANNER -->
+<p align="center">
+  <img src=".github/assets/banner.png" alt="Sercha" width="100%">
+</p>
+
 <!-- PROJECT TITLE -->
-<br />
 <div align="center">
-  <h1 align="center">Sercha CLI</h1>
 
   <p align="center">
     A unified, compact version for local, private search
