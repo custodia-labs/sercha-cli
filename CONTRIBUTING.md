@@ -38,7 +38,7 @@ Thank you for your interest in contributing to Sercha CLI! This document provide
 
 ### Prerequisites
 
-- Go 1.25 or later
+- Go 1.24 or later
 - CGO enabled (for C++ integration)
 - Xapian library installed:
   - macOS: `brew install xapian`

@@ -1,6 +1,6 @@
 module github.com/custodia-labs/sercha-cli
 
-go 1.25
+go 1.24.0
 
 // CLI Framework
 require github.com/spf13/cobra v1.10.1

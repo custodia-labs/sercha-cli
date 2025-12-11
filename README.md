@@ -73,7 +73,7 @@ Sercha CLI is a powerful, privacy-focused search tool designed for local environ
 
 ### Built With
 
-* [![Go][Go-badge]][Go-url] - Go 1.25+
+* [![Go][Go-badge]][Go-url] - Go 1.24+
 * **CGO Enabled** - For enhanced performance with C/C++ integration
 * **GoReleaser Pro** - Enterprise-grade release automation
 * **GitHub Actions** - Automated CI/CD pipeline
@@ -145,7 +145,7 @@ sudo mv sercha /usr/local/bin/
 
 ### From Source
 
-Requires Go 1.25 or later:
+Requires Go 1.24 or later:
 
 ```bash
 go install github.com/custodia-labs/sercha-cli/cmd/sercha@latest
@@ -189,7 +189,7 @@ For detailed guides and configuration options, visit the [Sercha Documentation](
 
 ### Prerequisites
 
-- Go 1.25 or later
+- Go 1.24 or later
 - CGO enabled
 
 ### Build
