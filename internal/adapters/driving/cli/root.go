@@ -11,9 +11,6 @@ var (
 	// Version is set by goreleaser ldflags.
 	version = "dev"
 
-	// CfgFile is the path to the config file.
-	cfgFile string
-
 	// Verbose enables debug logging.
 	verbose bool
 
@@ -79,7 +76,6 @@ func SetVersion(v string) {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.sercha.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "enable verbose debug output")
 
 	// Use PersistentPreRunE to set verbose mode before any command executes
