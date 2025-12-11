@@ -2,6 +2,8 @@
 <a id="readme-top"></a>
 
 <!-- PROJECT SHIELDS -->
+<p align="center">
+
 [![GitHub Release][release-shield]][release-url]
 [![License][license-shield]][license-url]
 [![Go Report Card][goreport-shield]][goreport-url]
@@ -9,10 +11,15 @@
 [![CI Workflow][ci-workflow-shield]][ci-workflow-url]
 [![Contributions Welcome][contributions-shield]][contributions-url]
 
+</p>
+
+<!-- BANNER -->
+<p align="center">
+  <img src=".github/assets/banner.png" alt="Sercha" width="100%">
+</p>
+
 <!-- PROJECT TITLE -->
-<br />
 <div align="center">
-  <h1 align="center">Sercha CLI</h1>
 
   <p align="center">
     A unified, compact version for local, private search
@@ -66,7 +73,7 @@ Sercha CLI is a powerful, privacy-focused search tool designed for local environ
 
 ### Built With
 
-* [![Go][Go-badge]][Go-url] - Go 1.25+
+* [![Go][Go-badge]][Go-url] - Go 1.24+
 * **CGO Enabled** - For enhanced performance with C/C++ integration
 * **GoReleaser Pro** - Enterprise-grade release automation
 * **GitHub Actions** - Automated CI/CD pipeline
@@ -123,6 +130,11 @@ Download the latest release for your platform from [GitHub Releases][release-url
 - **Linux (ARM64)**: `sercha_*_linux_arm64.tar.gz`
 - **Linux (x86_64)**: `sercha_*_linux_amd64.tar.gz`
 
+**Note**: Binary downloads require Xapian to be installed manually:
+- macOS: `brew install xapian`
+- Ubuntu/Debian: `sudo apt install libxapian30`
+- RHEL/CentOS: `sudo yum install xapian-core-libs`
+
 Extract and move to your PATH:
 ```bash
 tar -xzf sercha_*.tar.gz
@@ -133,7 +145,7 @@ sudo mv sercha /usr/local/bin/
 
 ### From Source
 
-Requires Go 1.25 or later:
+Requires Go 1.24 or later:
 
 ```bash
 go install github.com/custodia-labs/sercha-cli/cmd/sercha@latest
@@ -144,11 +156,31 @@ go install github.com/custodia-labs/sercha-cli/cmd/sercha@latest
 <!-- USAGE -->
 ## Usage
 
-Verify installation:
+### Quick Start
 
 ```bash
-sercha --version
+# 1. Add a local folder as a source
+sercha source add filesystem -c path=~/Documents
+
+# 2. Sync documents from the source
+sercha sync
+
+# 3. Search your documents
+sercha search "meeting notes"
+
+# 4. Or launch the interactive TUI
+sercha tui
 ```
+
+### Documentation
+
+For detailed guides and configuration options, visit the [Sercha Documentation](https://docs.sercha.dev):
+
+- [Quickstart Guide](https://docs.sercha.dev/cli/quickstart) - Get up and running in 5 minutes
+- [Supported Connectors](https://docs.sercha.dev/cli/supported-connectors) - GitHub, Google Drive, Gmail, and more
+- [AI Models](https://docs.sercha.dev/cli/models/overview) - Text, hybrid, and AI-assisted search
+- [TUI Guide](https://docs.sercha.dev/cli/tui/overview) - Interactive terminal interface
+- [MCP Server](https://docs.sercha.dev/cli/mcp/overview) - AI tool integration
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -157,7 +189,7 @@ sercha --version
 
 ### Prerequisites
 
-- Go 1.25 or later
+- Go 1.24 or later
 - CGO enabled
 
 ### Build
@@ -178,7 +210,7 @@ go test ./...
 go run ./cmd/sercha/main.go
 ```
 
-For more detailed development instructions, see [GUIDELINES.md](GUIDELINES.md).
+For more detailed development instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -191,10 +223,8 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 **Please read:**
 
-- [Contributing Guide](CONTRIBUTING.md) - How to contribute
-- [Development Workflow](DEVELOPMENT_WORKFLOW.md) - Branch naming, commits, PRs, releases
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute, development workflow, and governance
 - [Code of Conduct](CODE_OF_CONDUCT.md) - Community standards
-- [Governance](GOVERNANCE.md) - Project governance
 
 ### Quick Links
 

@@ -50,10 +50,21 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxapian-dev cmake
+
+      - name: Build C++ dependencies (hnswlib)
+        run: |
+          cd clib
+          cmake -B build
+          cmake --build build
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.24"
 
       - name: Build Linux
         uses: goreleaser/goreleaser-action@v6
@@ -79,10 +90,19 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
+      - name: Install build dependencies
+        run: brew install xapian cmake
+
+      - name: Build C++ dependencies (hnswlib)
+        run: |
+          cd clib
+          cmake -B build
+          cmake --build build
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.24"
 
       - name: Build macOS
         uses: goreleaser/goreleaser-action@v6
@@ -111,7 +131,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version: "1.24"
 
       - name: Restore Linux artifacts
         uses: actions/cache/restore@v4

@@ -5,6 +5,7 @@ Thank you for your interest in contributing to Sercha CLI! This document provide
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
 - [Development Workflow](#development-workflow)
 - [Branch Naming](#branch-naming)
 - [Commit Messages](#commit-messages)
@@ -12,6 +13,7 @@ Thank you for your interest in contributing to Sercha CLI! This document provide
 - [Running CI Locally](#running-ci-locally)
 - [Testing](#testing)
 - [Release Process](#release-process)
+- [Governance](#governance)
 
 ## Getting Started
 
@@ -36,88 +38,226 @@ Thank you for your interest in contributing to Sercha CLI! This document provide
 
 ### Prerequisites
 
-- Go 1.25 or later
+- Go 1.24 or later
 - CGO enabled (for C++ integration)
+- Xapian library installed:
+  - macOS: `brew install xapian`
+  - Ubuntu/Debian: `apt install libxapian-dev`
+  - RHEL/CentOS: `yum install xapian-core-devel`
 - GoReleaser (for release testing)
+
+## Project Structure
+
+```
+sercha-cli/
+├── cmd/
+│   └── sercha/
+│       └── main.go          # CLI entry point
+├── internal/                 # Private application code
+│   ├── adapters/            # Hexagonal architecture adapters
+│   │   ├── driven/          # Infrastructure (storage, external services)
+│   │   └── driving/         # Entry points (CLI, TUI)
+│   └── core/                # Business logic
+│       ├── domain/          # Domain models
+│       └── ports/           # Interface definitions
+├── .github/
+│   ├── workflows/           # GitHub Actions
+│   │   ├── release.yml      # Release automation
+│   │   └── go-ci.yml        # CI checks
+│   ├── PULL_REQUEST_TEMPLATE/
+│   └── ISSUE_TEMPLATE/
+├── .goreleaser.yml          # GoReleaser configuration
+├── VERSION                  # Current version
+├── go.mod                   # Go module definition
+├── LICENSE
+└── README.md
+```
 
 ## Development Workflow
 
-1. Create a new branch from `main`
-2. Make your changes
-3. Run tests and linting locally
-4. Commit using conventional commit format
-5. Push to your fork
-6. Open a pull request
+### Daily Development
+
+```bash
+# Start work
+git checkout main
+git pull upstream main
+git checkout -b feat/my-feature
+
+# Make changes
+# ...edit files...
+
+# Test
+go mod tidy && go vet ./... && go test ./...
+
+# Commit
+git add .
+git commit -m "feat(cli): add new feature"
+
+# Push and PR
+git push origin feat/my-feature
+```
 
 **All code changes must go through pull requests and pass CI.**
 
 ## Branch Naming
 
-Use the following pattern for branch names:
+Use the following pattern for all branches:
 
 ```
 type/short-description
 ```
 
-Where `type` is one of:
-- `feat` - New feature
-- `fix` - Bug fix
-- `docs` - Documentation only
-- `style` - Code style changes (formatting, etc.)
-- `refactor` - Code refactoring
-- `perf` - Performance improvements
-- `test` - Adding or updating tests
-- `chore` - Maintenance tasks
+### Branch Types
 
-**Examples:**
-- `feat/add-config-support`
-- `fix/linux-arm64-cross-compile`
-- `docs/update-installation`
+| Type | Description | Example |
+|------|-------------|---------|
+| `feat` | New feature | `feat/add-config-support` |
+| `fix` | Bug fix | `fix/linux-arm64-cross-compile` |
+| `docs` | Documentation | `docs/update-installation` |
+| `style` | Code style/formatting | `style/format-main-package` |
+| `refactor` | Code refactoring | `refactor/extract-parser-module` |
+| `perf` | Performance improvement | `perf/optimize-search-query` |
+| `test` | Tests | `test/add-cli-unit-tests` |
+| `chore` | Maintenance | `chore/update-dependencies` |
+
+### Examples
+
+```bash
+# Good branch names
+feat/add-search-subcommand
+fix/null-pointer-in-parser
+docs/contributing-guide
+
+# Bad branch names
+my-feature          # Missing type
+FEAT/add-feature    # Uppercase type
+feat/Add_Feature    # Underscores and mixed case
+```
 
 ## Commit Messages
 
-We use [Conventional Commits](https://www.conventionalcommits.org/) format:
+We follow [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+### Format
 
 ```
 type(scope): summary
+
+[optional body]
+
+[optional footer(s)]
 ```
 
-**Examples:**
-- `feat(cli): add search subcommand`
-- `fix(parser): correct null dereference`
-- `docs(readme): update installation instructions`
-- `test(cli): add unit tests for config loader`
+### Scope
+
+The scope should be the module or area affected:
+
+- `cli` - Command-line interface
+- `parser` - Parsing logic
+- `config` - Configuration handling
+- `build` - Build system
+- `deps` - Dependencies
+
+### Examples
+
+```bash
+# Simple commit
+feat(cli): add search subcommand
+
+# With body
+fix(parser): correct null dereference
+
+The parser was not checking for nil values when processing
+empty input strings. This caused panics in production.
+
+Fixes #123
+
+# Breaking change
+feat(api)!: change response format
+
+BREAKING CHANGE: The API response now returns an array
+instead of an object for list endpoints.
+```
 
 ### Rules
 
-- Use imperative mood ("add" not "added")
-- Keep summary under 72 characters
-- Reference issues when applicable
+1. **Use imperative mood** - "add" not "added" or "adds"
+2. **Don't capitalize** - "add feature" not "Add feature"
+3. **No period at end** - "add feature" not "add feature."
+4. **Keep summary under 72 characters**
+5. **Reference issues** when applicable
 
 ### Git Commit Template
 
-You can use our commit template:
+Enable the commit template for guidance:
+
 ```bash
 git config commit.template .gitmessage.txt
 ```
 
+### Commit Hook
+
+Install the commit message validation hook:
+
+```bash
+cp .github/hooks/commit-msg .git/hooks/commit-msg
+chmod +x .git/hooks/commit-msg
+```
+
+This will reject commits that don't follow Conventional Commits format.
+
 ## Pull Requests
 
-### Requirements
+### Before Opening a PR
 
-- All PRs must pass CI checks
-- All PRs require at least one review
-- VERSION changes require owner approval
-- Use the appropriate PR template from `.github/PULL_REQUEST_TEMPLATE/`
+1. **Sync with main**
+   ```bash
+   git fetch upstream
+   git rebase upstream/main
+   ```
 
-### PR Process
+2. **Run all checks**
+   ```bash
+   go mod tidy
+   go vet ./...
+   go test ./...
+   go build ./...
+   ```
 
-1. Ensure your branch is up to date with `main`
-2. Open a PR with a clear title and description
-3. Select the appropriate PR template (feature, bugfix, or release)
-4. Wait for CI to pass
-5. Address review feedback
-6. Squash and merge when approved
+3. **Ensure clean commits** - Squash WIP commits if needed
+
+### PR Requirements
+
+| Requirement | Description |
+|-------------|-------------|
+| CI Passing | All GitHub Actions checks must be green |
+| Review | At least one approving review required |
+| Up to Date | Branch must be current with `main` |
+| Template | Use appropriate PR template |
+| Description | Clear explanation of changes |
+
+### PR Templates
+
+Select the appropriate template from `.github/PULL_REQUEST_TEMPLATE/`:
+
+- **feature.md** - For new features
+- **bugfix.md** - For bug fixes
+- **release.md** - For version bumps
+
+### Review Process
+
+1. Open PR with appropriate template
+2. Wait for CI checks to pass
+3. Request review from maintainers
+4. Address feedback with additional commits
+5. Once approved, maintainer will merge
+
+### VERSION Changes
+
+Pull requests that modify the `VERSION` file:
+- Require owner/maintainer approval
+- Must use the `release.md` template
+- Should only contain the version bump (no other changes)
 
 ## Running CI Locally
 
@@ -172,24 +312,112 @@ go test ./internal/...
 
 ## Release Process
 
-Releases are automated through GitHub Actions:
+Releases are fully automated through GitHub Actions.
 
-1. **Bump VERSION**: Update the `VERSION` file with the new version number
-2. **Submit PR**: Create a PR with the VERSION change (use `release.md` template)
-3. **Merge**: After approval and CI passes, merge to `main`
-4. **Auto-tag**: The `tag-on-version-change.yml` workflow creates a git tag
-5. **Release**: GoReleaser builds and publishes:
-   - GitHub Release with binaries
-   - Homebrew cask
-   - Cloudsmith packages (deb/rpm)
+### Release Steps
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Bump        │ --> │ Create PR   │ --> │ Merge to    │ --> │ Release     │
+│ VERSION     │     │ (release    │     │ main        │     │ workflow    │
+│             │     │ template)   │     │             │     │ triggered   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+                                                                  │
+                                                                  v
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Users       │ <-- │ Packages    │ <-- │ GoReleaser  │ <-- │ Tag created │
+│ install     │     │ published   │     │ builds      │     │ & pushed    │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Detailed Steps
+
+1. **Bump VERSION**
+
+   Edit the `VERSION` file with the new version:
+   ```bash
+   echo "1.2.0" > VERSION
+   ```
+
+2. **Create Release PR**
+
+   - Create branch: `chore/release-1.2.0`
+   - Use the `release.md` PR template
+   - Request owner approval
+
+3. **Merge to Main**
+
+   Once approved, merge the PR to `main`.
+
+4. **Automated Release Pipeline**
+
+   The `release.yml` workflow automatically:
+   - Creates git tag `v1.2.0` and pushes it
+   - Builds binaries for all platforms (darwin/linux x amd64/arm64)
+   - Creates GitHub Release with assets
+   - Publishes Homebrew formula
+   - Uploads to Cloudsmith (deb/rpm)
+
+### What Gets Published
+
+| Platform | Artifacts |
+|----------|-----------|
+| GitHub | Release page with tar.gz archives |
+| Homebrew | Formula in `custodia-labs/homebrew-sercha` |
+| Cloudsmith | deb and rpm packages |
 
 ### Version Format
 
-Use semantic versioning: `MAJOR.MINOR.PATCH`
+Follow [Semantic Versioning](https://semver.org/):
 
-- `MAJOR`: Breaking changes
-- `MINOR`: New features (backwards compatible)
-- `PATCH`: Bug fixes (backwards compatible)
+```
+MAJOR.MINOR.PATCH
+```
+
+- **MAJOR** - Breaking changes
+- **MINOR** - New features (backwards compatible)
+- **PATCH** - Bug fixes (backwards compatible)
+
+### Pre-release Versions
+
+For pre-releases, use suffixes:
+- `1.0.0-alpha.1`
+- `1.0.0-beta.1`
+- `1.0.0-rc.1`
+
+## Governance
+
+### Roles
+
+**Maintainers** have write access to the repository and are responsible for:
+- Reviewing and merging pull requests
+- Triaging issues
+- Ensuring code quality and consistency
+- Helping contributors
+
+**Release Manager** (currently the project owner) is responsible for:
+- Approving VERSION changes
+- Coordinating releases
+- Monitoring release pipelines
+
+**Contributors** are community members who contribute through:
+- Code contributions
+- Documentation improvements
+- Bug reports and feature requests
+- Helping other users
+
+### Decision Making
+
+- **Routine decisions** (bug fixes, minor improvements) are made by individual maintainers through PR review
+- **Significant decisions** (new features, breaking changes, architecture) require discussion in a GitHub issue and maintainer consensus
+- **Disputes** are resolved through discussion; project owner makes final decision if needed
+
+### Becoming a Maintainer
+
+Contributors may be invited based on:
+- Consistent, high-quality contributions
+- Understanding of project goals and conventions
+- Positive interactions with the community
 
 ## Questions?
 
@@ -197,5 +425,3 @@ If you have questions, please open an issue or reach out to the maintainers.
 
 See also:
 - [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Development Workflow](DEVELOPMENT_WORKFLOW.md)
-- [Contributor Guidelines](GUIDELINES.md)

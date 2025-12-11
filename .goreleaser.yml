@@ -63,7 +63,7 @@ archives:
       - LICENSE
       - README.md
 
-homebrew_casks:
+brews:
   - name: sercha
     repository:
       owner: custodia-labs
@@ -72,29 +72,39 @@ homebrew_casks:
     commit_author:
       name: "Sercha Bot"
       email: "gurushey.deo@custodialabs.com"
-    description: "Sercha CLI"
+    description: "Local-first semantic search engine"
     homepage: "https://github.com/custodia-labs/sercha-cli"
-    binaries:
-      - sercha
+    license: "Apache-2.0"
+    dependencies:
+      - name: xapian
+        type: required
+      - name: poppler
+        type: required
 
 nfpms:
   - id: deb_pkgs
     package_name: sercha
     maintainer: "Gurushey Deo <gurushey.deo@custodialabs.com>"
-    description: "Sercha CLI"
+    description: "Local-first semantic search engine"
     homepage: "https://github.com/custodia-labs/sercha-cli"
     license: Apache-2.0
     formats: [deb]
     bindir: /usr/bin
+    dependencies:
+      - libxapian30
+      - poppler-utils
 
   - id: rpm_pkgs
     package_name: sercha
     maintainer: "Gurushey Deo <gurushey.deo@custodialabs.com>"
-    description: "Sercha CLI"
+    description: "Local-first semantic search engine"
     homepage: "https://github.com/custodia-labs/sercha-cli"
     license: Apache-2.0
     formats: [rpm]
     bindir: /usr/bin
+    dependencies:
+      - xapian-core-libs
+      - poppler-utils
 
 publishers:
   - name: upload-deb-jammy

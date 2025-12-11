@@ -34,4 +34,11 @@ go.work.sum
 
 # Build artifacts
 dist/
-sercha
+/sercha
+.claude/
+*/.DS_Store
+.DS_Store
+
+# Test directories
+test-local/
+clib/build/
