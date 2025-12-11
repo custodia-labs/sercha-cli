@@ -1,0 +1,209 @@
+# golangci-lint configuration for Sercha CLI
+# See: https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+  build-tags: []
+
+output:
+  formats:
+    - format: colored-line-number
+  print-linter-name: true
+  print-issued-lines: true
+
+linters:
+  enable:
+    # Default linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    # Additional linters
+    - bodyclose
+    - dogsled
+    - dupl
+    - errorlint
+    - exhaustive
+    - copyloopvar
+    - funlen
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - gofmt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - lll
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - stylecheck
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - whitespace
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  funlen:
+    lines: 100
+    statements: 50
+
+  gocognit:
+    min-complexity: 20
+
+  gocyclo:
+    min-complexity: 15
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+
+  godot:
+    scope: declarations
+    capital: true
+
+  goimports:
+    local-prefixes: github.com/custodia-labs/sercha-cli
+
+  lll:
+    line-length: 120
+    tab-width: 4
+
+  misspell:
+    locale: UK
+
+  nakedret:
+    max-func-lines: 30
+
+  nestif:
+    min-complexity: 4
+
+  prealloc:
+    simple: true
+    range-loops: true
+    for-loops: true
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unreachable-code
+
+  stylecheck:
+    checks:
+      - all
+      - -ST1000  # Package comments
+      - -ST1003  # MixedCaps
+
+issues:
+  exclude-dirs:
+    - vendor
+    - clib
+    - cgo
+
+  exclude-rules:
+    # Exclude some linters from running on tests files
+    - path: _test\.go
+      linters:
+        - dupl
+        - funlen
+        - gocognit
+        - gocyclo
+        - errcheck
+        - errorlint
+        - godot
+        - goconst
+        - gocritic
+        - gosec
+        - misspell
+        - revive
+        - rowserrcheck
+        - staticcheck
+        - unparam
+        - lll
+        - stylecheck
+        - unused
+        - nolintlint
+        - bodyclose
+        - nestif
+
+    # Exclude lll for lines with long URLs or generated content
+    - linters:
+        - lll
+      source: "^//go:generate"
+
+    # Allow returning errors without wrapping in stubs
+    - path: ".*_stub\\.go"
+      linters:
+        - errorlint
+
+    # Exclude misspell for lipgloss.Color - it's the library's type name
+    - linters:
+        - misspell
+      source: "lipgloss\\.Color"
+
+    # Exclude gochecknoinits for CLI commands - Cobra requires init()
+    - path: internal/adapters/driving/cli/
+      linters:
+        - gochecknoinits
+
+    # Exclude complexity linters for GitHub connector - inherently complex sync logic
+    - path: internal/connectors/github/
+      linters:
+        - misspell
+        - gocognit
+        - gocyclo
+        - funlen
+        - gocritic
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false

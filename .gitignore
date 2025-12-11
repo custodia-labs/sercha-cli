@@ -38,3 +38,7 @@ sercha
 .claude/
 */.DS_Store
 .DS_Store
+
+# Test directories
+test-local/
+clib/build/
