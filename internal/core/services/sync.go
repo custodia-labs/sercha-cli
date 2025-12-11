@@ -190,6 +190,8 @@ func (o *SyncOrchestrator) Status(_ context.Context, sourceID string) (*driving.
 
 // processDocuments handles full sync - processes all documents from the connector.
 // Returns the new cursor from SyncComplete if the connector provides one.
+//
+//nolint:gocognit // Orchestration function coordinating multiple async operations
 func (o *SyncOrchestrator) processDocuments(
 	ctx context.Context,
 	source *domain.Source,

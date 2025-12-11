@@ -13,7 +13,11 @@ import (
 // When using Format("raw"), msg.Raw contains the base64url-encoded RFC 2822 message.
 func MessageToRawDocument(msg *gmail.Message, sourceID string) *domain.RawDocument {
 	// Decode the base64url-encoded raw message (RFC 2822 format)
-	rawBytes, _ := base64.URLEncoding.DecodeString(msg.Raw)
+	rawBytes, err := base64.URLEncoding.DecodeString(msg.Raw)
+	if err != nil {
+		// Fall back to empty content if decoding fails
+		rawBytes = []byte{}
+	}
 	parentURI := buildParentURI(msg)
 
 	return &domain.RawDocument{

@@ -85,7 +85,7 @@ func run() int {
 		return 1
 	}
 
-	aiResult, err := initialiseAIServices(settings, vectorPath)
+	aiResult, err := ai.InitialiseServices(settings, vectorPath)
 	if err != nil {
 		log.Printf("fatal error initialising AI: %v", err)
 		return 1

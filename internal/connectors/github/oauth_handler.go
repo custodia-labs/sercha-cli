@@ -148,7 +148,8 @@ func (h *OAuthHandler) SetupHint() string {
 
 // GitHub OAuth constants.
 const (
-	defaultAuthURL  = "https://github.com/login/oauth/authorize"
+	defaultAuthURL = "https://github.com/login/oauth/authorize"
+	//nolint:gosec // G101: Not credentials, OAuth endpoint URL
 	defaultTokenURL = "https://github.com/login/oauth/access_token"
 )
 

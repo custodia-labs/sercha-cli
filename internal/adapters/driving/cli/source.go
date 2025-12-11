@@ -347,7 +347,6 @@ func runSourceAdd(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-//nolint:gocognit // CLI interactive display with multiple optional fields
 func runSourceList(cmd *cobra.Command, _ []string) error {
 	if sourceService == nil {
 		return errors.New("source service not configured")
@@ -698,8 +697,9 @@ func handleOAuthAuth(
 	}
 	defer callbackServer.Stop()
 
-	// Build auth URL via connector registry (includes provider-specific params like access_type=offline)
-	authURL, err := connectorRegistry.BuildAuthURL(connector.ID, authProvider, callbackServer.RedirectURI(), state, codeChallenge)
+	// Build auth URL via connector registry (includes provider-specific params)
+	authURL, err := connectorRegistry.BuildAuthURL(
+		connector.ID, authProvider, callbackServer.RedirectURI(), state, codeChallenge)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build auth URL: %w", err)
 	}

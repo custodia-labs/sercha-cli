@@ -130,7 +130,7 @@ func (h *OAuthHandler) SetupHint() string {
 // Google OAuth constants.
 const (
 	defaultAuthURL  = "https://accounts.google.com/o/oauth2/v2/auth"
-	defaultTokenURL = "https://oauth2.googleapis.com/token"
+	defaultTokenURL = "https://oauth2.googleapis.com/token" //nolint:gosec // G101: Not credentials, OAuth endpoint URL
 )
 
 // defaultScopes are the default OAuth scopes for Google.

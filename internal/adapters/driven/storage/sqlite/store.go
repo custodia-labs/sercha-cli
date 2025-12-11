@@ -6,6 +6,7 @@ import (
 	"embed"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"math"
@@ -756,8 +757,6 @@ type authProviderStore struct {
 var _ driven.AuthProviderStore = (*authProviderStore)(nil)
 
 // Save stores or updates an auth provider.
-//
-//nolint:gocritic // hugeParam: interface defines signature with value type
 func (s *authProviderStore) Save(ctx context.Context, provider domain.AuthProvider) error {
 	if provider.ID == "" {
 		return domain.ErrInvalidInput
@@ -921,8 +920,6 @@ type credentialsStore struct {
 var _ driven.CredentialsStore = (*credentialsStore)(nil)
 
 // Save stores or updates credentials.
-//
-//nolint:gocritic // hugeParam: interface defines signature with value type
 func (s *credentialsStore) Save(ctx context.Context, creds domain.Credentials) error {
 	if creds.ID == "" || creds.SourceID == "" {
 		return domain.ErrInvalidInput
@@ -975,7 +972,7 @@ func (s *credentialsStore) GetBySourceID(ctx context.Context, sourceID string) (
 	`, sourceID)
 
 	creds, err := scanCredentials(row)
-	if err == domain.ErrNotFound {
+	if errors.Is(err, domain.ErrNotFound) {
 		return nil, nil // No credentials for this source is valid
 	}
 	return creds, err

@@ -272,7 +272,7 @@ func runAuthAddNonInteractive(ctx context.Context, cmd *cobra.Command) error {
 	return nil
 }
 
-//nolint:errcheck,gocyclo,funlen // CLI interactive flow
+//nolint:errcheck // CLI interactive flow
 func collectOAuthAppConfig(
 	cmd *cobra.Command,
 	reader *bufio.Reader,
