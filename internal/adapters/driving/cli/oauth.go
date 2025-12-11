@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"html"
 	"net"
 	"net/http"
 	"os/exec"
@@ -149,6 +150,8 @@ func (s *OAuthCallbackServer) RedirectURI() string {
 
 //nolint:misspell // CSS properties use American spelling (center, color)
 func successHTML(title, message string) string {
+	escapedTitle := html.EscapeString(title)
+	escapedMessage := html.EscapeString(message)
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html>
 <head>
@@ -180,7 +183,7 @@ func successHTML(title, message string) string {
         <p>%s</p>
     </div>
 </body>
-</html>`, title, message)
+</html>`, escapedTitle, escapedMessage)
 }
 
 // OpenBrowser opens the default browser to the given URL.
