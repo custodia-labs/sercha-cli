@@ -50,6 +50,17 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxapian-dev cmake
+
+      - name: Build C++ dependencies (hnswlib)
+        run: |
+          cd clib
+          cmake -B build
+          cmake --build build
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -78,6 +89,15 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ needs.create-tag.outputs.tag }}
+
+      - name: Install build dependencies
+        run: brew install xapian cmake
+
+      - name: Build C++ dependencies (hnswlib)
+        run: |
+          cd clib
+          cmake -B build
+          cmake --build build
 
       - name: Set up Go
         uses: actions/setup-go@v5
