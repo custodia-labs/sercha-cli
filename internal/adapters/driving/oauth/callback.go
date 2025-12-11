@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"html"
 	"net"
 	"net/http"
 	"os/exec"
@@ -86,7 +87,7 @@ func (s *CallbackServer) handleCallback(w http.ResponseWriter, r *http.Request) 
 		errDesc := r.URL.Query().Get("error_description")
 		s.errChan <- fmt.Errorf("oauth error: %s - %s", errParam, errDesc)
 		w.Header().Set("Content-Type", "text/html")
-		_, _ = fmt.Fprint(w, successHTML(fmt.Sprintf("Authorization failed: %s", errDesc), ""))
+		_, _ = fmt.Fprint(w, successHTML(fmt.Sprintf("Authorization failed: %s", html.EscapeString(errDesc)), ""))
 		return
 	}
 
