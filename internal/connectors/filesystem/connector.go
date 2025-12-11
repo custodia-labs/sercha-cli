@@ -217,6 +217,8 @@ func (c *Connector) readFile(path string) (*domain.RawDocument, error) {
 // detectMIMEType returns the MIME type for a file based on its extension.
 // Code and text file extensions are checked first because system MIME databases
 // often map these to incorrect types (e.g., .ts to video/mp2t, .rs to RLS services).
+//
+//nolint:gocyclo // Switch statement with many cases for file extensions
 func detectMIMEType(path string) string {
 	ext := filepath.Ext(path)
 	if ext == "" {
@@ -248,6 +250,8 @@ func detectMIMEType(path string) string {
 		return "text/x-shellscript"
 	case ".sql":
 		return "text/x-sql"
+	case ".xml":
+		return "application/xml" // Normalised: Linux returns text/xml, macOS returns application/xml
 	}
 
 	// Use Go's mime package for standard types (images, documents, etc.)

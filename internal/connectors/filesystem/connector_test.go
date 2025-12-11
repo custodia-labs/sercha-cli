@@ -940,7 +940,7 @@ func TestDetectMIMEType(t *testing.T) {
 		{"page.html", "text/html"},
 		{"style.css", "text/css"},
 		{"script.js", "text/javascript"},
-		{"data.xml", "application/xml"}, // macOS returns application/xml
+		{"data.xml", "application/xml"}, // Normalized in detectMIMEType
 		{"doc.pdf", "application/pdf"},
 		{"archive.zip", "application/zip"},
 		{"image.png", "image/png"},
