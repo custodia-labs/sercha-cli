@@ -93,7 +93,7 @@ func (n *Normaliser) Normalise(_ context.Context, raw *domain.RawDocument) (*dri
 // createDocument builds the normalised document.
 func (n *Normaliser) createDocument(raw *domain.RawDocument, title, content string) *driven.NormaliseResult {
 	if title == "" {
-		title = extractTitleFromURI(raw.URI)
+		title = extractTitleFromMetadataOrURI(raw)
 	}
 
 	doc := domain.Document{
@@ -324,6 +324,16 @@ func formatEvent(evt *event) string {
 	}
 
 	return result.String()
+}
+
+// extractTitleFromMetadataOrURI checks metadata for title first, then falls back to URI.
+func extractTitleFromMetadataOrURI(raw *domain.RawDocument) string {
+	if raw.Metadata != nil {
+		if title, ok := raw.Metadata["title"].(string); ok && title != "" {
+			return title
+		}
+	}
+	return extractTitleFromURI(raw.URI)
 }
 
 // extractTitleFromURI extracts a title from the file URI.

@@ -137,7 +137,7 @@ func TestShouldSyncFile(t *testing.T) {
 	}
 }
 
-func TestIsTextFile(t *testing.T) {
+func TestShouldDownloadContent(t *testing.T) {
 	tests := []struct {
 		name     string
 		mimeType string
@@ -189,22 +189,22 @@ func TestIsTextFile(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "application/pdf is not text",
+			name:     "application/pdf is downloadable",
 			mimeType: "application/pdf",
-			expected: false,
+			expected: true,
 		},
 		{
-			name:     "image/png is not text",
+			name:     "image/png is not downloadable",
 			mimeType: "image/png",
 			expected: false,
 		},
 		{
-			name:     "application/octet-stream is not text",
+			name:     "application/octet-stream is not downloadable",
 			mimeType: "application/octet-stream",
 			expected: false,
 		},
 		{
-			name:     "video/mp4 is not text",
+			name:     "video/mp4 is not downloadable",
 			mimeType: "video/mp4",
 			expected: false,
 		},
@@ -212,7 +212,7 @@ func TestIsTextFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := isTextFile(tt.mimeType)
+			result := shouldDownloadContent(tt.mimeType)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

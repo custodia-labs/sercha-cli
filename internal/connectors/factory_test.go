@@ -319,13 +319,17 @@ func TestFactory_SupportedTypes(t *testing.T) {
 
 		supportedTypes := factory.SupportedTypes()
 
-		// All default connectors: filesystem, github, google-drive, gmail, google-calendar
-		assert.Len(t, supportedTypes, 5)
+		// All default connectors: filesystem, github, google-drive, gmail, google-calendar,
+		// outlook, onedrive, microsoft-calendar
+		assert.Len(t, supportedTypes, 8)
 		assert.Contains(t, supportedTypes, "filesystem")
 		assert.Contains(t, supportedTypes, "github")
 		assert.Contains(t, supportedTypes, "google-drive")
 		assert.Contains(t, supportedTypes, "gmail")
 		assert.Contains(t, supportedTypes, "google-calendar")
+		assert.Contains(t, supportedTypes, "outlook")
+		assert.Contains(t, supportedTypes, "onedrive")
+		assert.Contains(t, supportedTypes, "microsoft-calendar")
 	})
 
 	t.Run("returns empty slice for factory with no builders", func(t *testing.T) {

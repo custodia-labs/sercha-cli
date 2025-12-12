@@ -8,6 +8,9 @@ import (
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/calendar"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/drive"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/gmail"
+	mscalendar "github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/calendar"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/onedrive"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/outlook"
 	"github.com/custodia-labs/sercha-cli/internal/core/domain"
 	"github.com/custodia-labs/sercha-cli/internal/core/ports/driven"
 	"github.com/custodia-labs/sercha-cli/internal/core/ports/driving"
@@ -38,6 +41,9 @@ func (r *ConnectorRegistry) registerBuiltinConnectors() {
 	r.registerGoogleDrive()
 	r.registerGmail()
 	r.registerGoogleCalendar()
+	r.registerOutlook()
+	r.registerOneDrive()
+	r.registerMicrosoftCalendar()
 }
 
 func (r *ConnectorRegistry) registerFilesystem() {
@@ -197,11 +203,96 @@ func calendarConfigKeys() []domain.ConfigKey {
 	}
 }
 
+func (r *ConnectorRegistry) registerOutlook() {
+	r.connectors["outlook"] = domain.ConnectorType{
+		ID:             "outlook",
+		Name:           "Outlook",
+		Description:    "Index emails from Microsoft Outlook",
+		ProviderType:   domain.ProviderMicrosoft,
+		AuthCapability: domain.AuthCapOAuth,
+		AuthMethod:     domain.AuthMethodOAuth,
+		ConfigKeys:     outlookConfigKeys(),
+		WebURLResolver: outlook.ResolveWebURL,
+	}
+}
+
+func outlookConfigKeys() []domain.ConfigKey {
+	return []domain.ConfigKey{
+		{
+			Key:         "folder_ids",
+			Label:       "Folder IDs",
+			Description: "Folder IDs to sync (optional, defaults to Inbox)",
+		},
+		{
+			Key:         "query",
+			Label:       "Search Query",
+			Description: "OData filter query to filter emails",
+		},
+	}
+}
+
+func (r *ConnectorRegistry) registerOneDrive() {
+	r.connectors["onedrive"] = domain.ConnectorType{
+		ID:             "onedrive",
+		Name:           "OneDrive",
+		Description:    "Index files from Microsoft OneDrive",
+		ProviderType:   domain.ProviderMicrosoft,
+		AuthCapability: domain.AuthCapOAuth,
+		AuthMethod:     domain.AuthMethodOAuth,
+		ConfigKeys:     onedriveConfigKeys(),
+		WebURLResolver: onedrive.ResolveWebURL,
+	}
+}
+
+func onedriveConfigKeys() []domain.ConfigKey {
+	return []domain.ConfigKey{
+		{
+			Key:         "folder_path",
+			Label:       "Folder Path",
+			Description: "Path to folder to sync (optional, defaults to root)",
+		},
+	}
+}
+
+func (r *ConnectorRegistry) registerMicrosoftCalendar() {
+	r.connectors["microsoft-calendar"] = domain.ConnectorType{
+		ID:             "microsoft-calendar",
+		Name:           "Microsoft Calendar",
+		Description:    "Index events from Microsoft Calendar",
+		ProviderType:   domain.ProviderMicrosoft,
+		AuthCapability: domain.AuthCapOAuth,
+		AuthMethod:     domain.AuthMethodOAuth,
+		ConfigKeys:     msCalendarConfigKeys(),
+		WebURLResolver: mscalendar.ResolveWebURL,
+	}
+}
+
+func msCalendarConfigKeys() []domain.ConfigKey {
+	return []domain.ConfigKey{
+		{
+			Key:         "calendar_ids",
+			Label:       "Calendar IDs",
+			Description: "Specific calendar IDs to sync (optional)",
+		},
+	}
+}
+
 // List returns all available connector types.
 func (r *ConnectorRegistry) List() []domain.ConnectorType {
 	result := make([]domain.ConnectorType, 0, len(r.connectors))
 	for _, c := range r.connectors {
 		result = append(result, c)
+	}
+	return result
+}
+
+// GetConnectorsForProvider returns all connector types for a given provider.
+func (r *ConnectorRegistry) GetConnectorsForProvider(provider domain.ProviderType) []domain.ConnectorType {
+	var result []domain.ConnectorType
+	for _, c := range r.connectors {
+		if c.ProviderType == provider {
+			result = append(result, c)
+		}
 	}
 	return result
 }

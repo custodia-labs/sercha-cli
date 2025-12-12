@@ -26,6 +26,14 @@ type ConnectorRegistry interface {
 	// Returns ErrNotFound if the connector type doesn't exist.
 	Get(id string) (*domain.ConnectorType, error)
 
+	// GetConnectorsForProvider returns all connector types for a given provider.
+	// Returns empty slice if provider has no connectors.
+	GetConnectorsForProvider(provider domain.ProviderType) []domain.ConnectorType
+
+	// ValidateConfig validates configuration for a connector type.
+	// Returns ErrNotFound if connector doesn't exist, ErrInvalidInput if validation fails.
+	ValidateConfig(connectorID string, config map[string]string) error
+
 	// GetOAuthDefaults returns default OAuth URLs and scopes for a connector type.
 	// Returns nil if the connector type doesn't support OAuth.
 	GetOAuthDefaults(connectorType string) *OAuthDefaults

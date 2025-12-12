@@ -34,7 +34,18 @@ type DefaultRunner struct{}
 // Run executes a command and returns its output.
 func (r *DefaultRunner) Run(ctx context.Context, name string, args ...string) ([]byte, error) {
 	cmd := exec.CommandContext(ctx, name, args...)
-	return cmd.Output()
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		// Include stderr in error for better debugging
+		if stderr.Len() > 0 {
+			return nil, fmt.Errorf("%w: %s", err, strings.TrimSpace(stderr.String()))
+		}
+		return nil, err
+	}
+	return stdout.Bytes(), nil
 }
 
 // Normaliser handles PDF documents using pdftotext.

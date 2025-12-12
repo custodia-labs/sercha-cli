@@ -11,6 +11,10 @@ import (
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/calendar"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/drive"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/gmail"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft"
+	mscalendar "github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/calendar"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/onedrive"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/outlook"
 	"github.com/custodia-labs/sercha-cli/internal/core/domain"
 	"github.com/custodia-labs/sercha-cli/internal/core/ports/driven"
 )
@@ -89,12 +93,51 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return calendar.New(source.ID, cfg, tokenProvider), nil
 	})
 
+	// Register Outlook connector
+	f.Register("outlook", func(
+		source domain.Source, tokenProvider driven.TokenProvider,
+	) (driven.Connector, error) {
+		cfg, err := outlook.ParseConfig(source)
+		if err != nil {
+			return nil, fmt.Errorf("outlook config: %w", err)
+		}
+		return outlook.New(source.ID, cfg, tokenProvider), nil
+	})
+
+	// Register OneDrive connector
+	f.Register("onedrive", func(
+		source domain.Source, tokenProvider driven.TokenProvider,
+	) (driven.Connector, error) {
+		cfg, err := onedrive.ParseConfig(source)
+		if err != nil {
+			return nil, fmt.Errorf("onedrive config: %w", err)
+		}
+		return onedrive.New(source.ID, cfg, tokenProvider), nil
+	})
+
+	// Register Microsoft Calendar connector
+	f.Register("microsoft-calendar", func(
+		source domain.Source, tokenProvider driven.TokenProvider,
+	) (driven.Connector, error) {
+		cfg, err := mscalendar.ParseConfig(source)
+		if err != nil {
+			return nil, fmt.Errorf("microsoft-calendar config: %w", err)
+		}
+		return mscalendar.New(source.ID, cfg, tokenProvider), nil
+	})
+
 	// Register OAuth handlers
 	googleOAuth := google.NewOAuthHandler()
 	f.RegisterOAuthHandler("google-drive", googleOAuth)
 	f.RegisterOAuthHandler("gmail", googleOAuth)
 	f.RegisterOAuthHandler("google-calendar", googleOAuth)
 	f.RegisterOAuthHandler("github", github.NewOAuthHandler())
+
+	// Microsoft OAuth handler for all Microsoft connectors
+	microsoftOAuth := microsoft.NewOAuthHandler()
+	f.RegisterOAuthHandler("outlook", microsoftOAuth)
+	f.RegisterOAuthHandler("onedrive", microsoftOAuth)
+	f.RegisterOAuthHandler("microsoft-calendar", microsoftOAuth)
 
 	return f
 }

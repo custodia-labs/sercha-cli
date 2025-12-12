@@ -40,7 +40,7 @@ func FileToRawDocument(
 	content, exportedMime, err := fetchFileContent(ctx, svc, file)
 	if err != nil {
 		// Log error but continue with metadata only
-		content = ""
+		content = nil
 	}
 
 	// Use exported MIME type if file was converted, otherwise use original
@@ -56,7 +56,7 @@ func FileToRawDocument(
 		SourceID: sourceID,
 		URI:      fmt.Sprintf("gdrive://files/%s", file.Id),
 		MIMEType: mimeType,
-		Content:  []byte(content),
+		Content:  content,
 		Metadata: map[string]any{
 			"file_id":       file.Id,
 			"title":         file.Name,
@@ -68,9 +68,9 @@ func FileToRawDocument(
 	}, nil
 }
 
-// fetchFileContent retrieves the text content of a file.
+// fetchFileContent retrieves the content of a file.
 // Returns (content, exportedMIME, error) where exportedMIME is non-empty if the file was converted.
-func fetchFileContent(ctx context.Context, svc *drive.Service, file *drive.File) (string, string, error) {
+func fetchFileContent(ctx context.Context, svc *drive.Service, file *drive.File) ([]byte, string, error) {
 	// Handle Google Workspace files (Docs, Sheets, etc.)
 	switch file.MimeType {
 	case MimeTypeGoogleDoc:
@@ -84,15 +84,15 @@ func fetchFileContent(ctx context.Context, svc *drive.Service, file *drive.File)
 		return content, ExportMimeText, err
 	}
 
-	// Skip binary files or files that are too large
-	if !isTextFile(file.MimeType) || file.Size > MaxExportSize {
-		return "", "", nil
+	// Skip files we can't normalise or files that are too large
+	if !shouldDownloadContent(file.MimeType) || file.Size > MaxExportSize {
+		return nil, "", nil
 	}
 
 	// Download regular file content
 	resp, err := svc.Files.Get(file.Id).Context(ctx).Download()
 	if err != nil {
-		return "", "", fmt.Errorf("download file: %w", err)
+		return nil, "", fmt.Errorf("download file: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -100,18 +100,18 @@ func fetchFileContent(ctx context.Context, svc *drive.Service, file *drive.File)
 	limitedReader := io.LimitReader(resp.Body, MaxExportSize)
 	data, err := io.ReadAll(limitedReader)
 	if err != nil {
-		return "", "", fmt.Errorf("read file content: %w", err)
+		return nil, "", fmt.Errorf("read file content: %w", err)
 	}
 
 	// Regular files keep their original MIME type (empty exportedMIME)
-	return string(data), "", nil
+	return data, "", nil
 }
 
 // exportGoogleFile exports a Google Workspace file to the specified format.
-func exportGoogleFile(ctx context.Context, svc *drive.Service, fileID, exportMime string) (string, error) {
+func exportGoogleFile(ctx context.Context, svc *drive.Service, fileID, exportMime string) ([]byte, error) {
 	resp, err := svc.Files.Export(fileID, exportMime).Context(ctx).Download()
 	if err != nil {
-		return "", fmt.Errorf("export file: %w", err)
+		return nil, fmt.Errorf("export file: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -119,10 +119,10 @@ func exportGoogleFile(ctx context.Context, svc *drive.Service, fileID, exportMim
 	limitedReader := io.LimitReader(resp.Body, MaxExportSize)
 	data, err := io.ReadAll(limitedReader)
 	if err != nil {
-		return "", fmt.Errorf("read export: %w", err)
+		return nil, fmt.Errorf("read export: %w", err)
 	}
 
-	return string(data), nil
+	return data, nil
 }
 
 // buildFilePath constructs a simple path representation.
@@ -135,24 +135,28 @@ func buildFilePath(file *drive.File) string {
 	return fmt.Sprintf("/%s/%s", file.Parents[0], file.Name)
 }
 
-// isTextFile checks if a MIME type is likely text content.
-func isTextFile(mimeType string) bool {
+// shouldDownloadContent checks if a MIME type requires content download.
+// This includes text files and binary formats that have normalisers (e.g., PDF).
+func shouldDownloadContent(mimeType string) bool {
 	// Text MIME types
 	if strings.HasPrefix(mimeType, "text/") {
 		return true
 	}
 
-	// Common text-based types
-	textTypes := []string{
+	// Types that need content downloaded for normalisation
+	downloadTypes := []string{
+		// Text-based formats
 		"application/json",
 		"application/xml",
 		"application/javascript",
 		"application/x-yaml",
 		"application/x-sh",
 		"application/sql",
+		// Binary formats with normalisers
+		"application/pdf",
 	}
 
-	for _, t := range textTypes {
+	for _, t := range downloadTypes {
 		if mimeType == t {
 			return true
 		}

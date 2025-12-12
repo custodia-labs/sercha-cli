@@ -4,87 +4,93 @@ import (
 	"fmt"
 
 	"github.com/custodia-labs/sercha-cli/internal/core/domain"
+	"github.com/custodia-labs/sercha-cli/internal/core/ports/driven"
 	"github.com/custodia-labs/sercha-cli/internal/core/ports/driving"
 )
 
-// providerConnectors maps provider types to their compatible connector types.
-var providerConnectors = map[domain.ProviderType][]string{
-	domain.ProviderLocal:  {"filesystem"},
-	domain.ProviderGoogle: {"google-drive", "gmail", "google-calendar"},
-	domain.ProviderGitHub: {"github"},
-}
-
-// providerCapabilities maps provider types to their supported auth methods.
-var providerCapabilities = map[domain.ProviderType]domain.AuthCapability{
-	domain.ProviderLocal:  domain.AuthCapNone,
-	domain.ProviderGitHub: domain.AuthCapPAT | domain.AuthCapOAuth, // GitHub supports both!
-	domain.ProviderGoogle: domain.AuthCapOAuth,
-}
-
-// connectorProviders is the inverse mapping (connector -> provider).
-var connectorProviders map[string]domain.ProviderType
-
-//nolint:gochecknoinits // Package-level static mapping initialization
-func init() {
-	connectorProviders = make(map[string]domain.ProviderType)
-	for provider, connectors := range providerConnectors {
-		for _, connector := range connectors {
-			connectorProviders[connector] = provider
-		}
-	}
-}
-
 // ProviderRegistry provides information about providers and their compatible connectors.
-type ProviderRegistry struct{}
+// It derives all provider information from the registered connectors, ensuring no
+// hardcoded provider knowledge exists in this service.
+type ProviderRegistry struct {
+	connectorRegistry driving.ConnectorRegistry
+	connectorFactory  driven.ConnectorFactory
+}
 
 // Ensure ProviderRegistry implements the interface.
 var _ driving.ProviderRegistry = (*ProviderRegistry)(nil)
 
 // NewProviderRegistry creates a new ProviderRegistry.
-func NewProviderRegistry() *ProviderRegistry {
-	return &ProviderRegistry{}
+// Both dependencies are required for full functionality but can be nil for limited use.
+func NewProviderRegistry(
+	connectorRegistry driving.ConnectorRegistry,
+	connectorFactory driven.ConnectorFactory,
+) *ProviderRegistry {
+	return &ProviderRegistry{
+		connectorRegistry: connectorRegistry,
+		connectorFactory:  connectorFactory,
+	}
 }
 
 // GetProviders returns all available provider types.
+// Derives the list from registered connectors.
 func (r *ProviderRegistry) GetProviders() []domain.ProviderType {
-	providers := make([]domain.ProviderType, 0, len(providerConnectors))
-	for provider := range providerConnectors {
-		providers = append(providers, provider)
+	if r.connectorRegistry == nil {
+		return nil
 	}
+
+	seen := make(map[domain.ProviderType]bool)
+	var providers []domain.ProviderType
+
+	for _, connector := range r.connectorRegistry.List() {
+		if !seen[connector.ProviderType] {
+			seen[connector.ProviderType] = true
+			providers = append(providers, connector.ProviderType)
+		}
+	}
+
 	return providers
 }
 
 // GetConnectorsForProvider returns connector types compatible with a provider.
 func (r *ProviderRegistry) GetConnectorsForProvider(provider domain.ProviderType) []string {
-	if connectors, ok := providerConnectors[provider]; ok {
-		// Return a copy to prevent modification
-		result := make([]string, len(connectors))
-		copy(result, connectors)
-		return result
+	if r.connectorRegistry == nil {
+		return nil
 	}
-	return nil
+
+	connectors := r.connectorRegistry.GetConnectorsForProvider(provider)
+	result := make([]string, len(connectors))
+	for i, c := range connectors {
+		result[i] = c.ID
+	}
+	return result
 }
 
 // GetProviderForConnector returns the provider type for a connector.
 func (r *ProviderRegistry) GetProviderForConnector(connectorType string) (domain.ProviderType, error) {
-	if provider, ok := connectorProviders[connectorType]; ok {
-		return provider, nil
+	if r.connectorRegistry == nil {
+		return "", fmt.Errorf("connector registry not available")
 	}
-	return "", fmt.Errorf("unknown connector type: %s", connectorType)
+
+	connector, err := r.connectorRegistry.Get(connectorType)
+	if err != nil {
+		return "", fmt.Errorf("unknown connector type: %s", connectorType)
+	}
+
+	return connector.ProviderType, nil
 }
 
 // IsCompatible checks if a connector can use a provider.
 func (r *ProviderRegistry) IsCompatible(provider domain.ProviderType, connectorType string) bool {
-	connectors, ok := providerConnectors[provider]
-	if !ok {
+	if r.connectorRegistry == nil {
 		return false
 	}
-	for _, c := range connectors {
-		if c == connectorType {
-			return true
-		}
+
+	connector, err := r.connectorRegistry.Get(connectorType)
+	if err != nil {
+		return false
 	}
-	return false
+
+	return connector.ProviderType == provider
 }
 
 // GetDefaultAuthMethod returns the typical auth method for a provider.
@@ -102,11 +108,19 @@ func (r *ProviderRegistry) GetDefaultAuthMethod(provider domain.ProviderType) do
 }
 
 // GetAuthCapability returns the authentication capabilities for a provider.
+// Derives this from the first connector registered for the provider.
 func (r *ProviderRegistry) GetAuthCapability(provider domain.ProviderType) domain.AuthCapability {
-	if authCap, ok := providerCapabilities[provider]; ok {
-		return authCap
+	if r.connectorRegistry == nil {
+		return domain.AuthCapNone
 	}
-	return domain.AuthCapNone
+
+	connectors := r.connectorRegistry.GetConnectorsForProvider(provider)
+	if len(connectors) == 0 {
+		return domain.AuthCapNone
+	}
+
+	// All connectors for a provider should have the same auth capability
+	return connectors[0].AuthCapability
 }
 
 // GetSupportedAuthMethods returns all auth methods supported by a provider.
@@ -122,48 +136,37 @@ func (r *ProviderRegistry) SupportsMultipleAuthMethods(provider domain.ProviderT
 // HasMultipleConnectors returns true if the provider supports multiple distinct connectors
 // that can share an OAuth app. For example, Google has Drive, Gmail, Calendar as separate
 // connectors that can share the same OAuth app credentials.
-// Single-connector providers like GitHub, Notion, and Slack return false.
 func (r *ProviderRegistry) HasMultipleConnectors(provider domain.ProviderType) bool {
-	switch provider {
-	case domain.ProviderGoogle:
-		// Google has Drive, Gmail, Calendar, Docs - users may want to share OAuth app
-		return true
-	case domain.ProviderGitHub, domain.ProviderLocal, domain.ProviderSlack, domain.ProviderNotion:
-		// Single-connector providers or not yet implemented - go straight to credentials
-		return false
-	default:
+	if r.connectorRegistry == nil {
 		return false
 	}
+
+	connectors := r.connectorRegistry.GetConnectorsForProvider(provider)
+	return len(connectors) > 1
 }
 
 // GetOAuthEndpoints returns the OAuth endpoints for a provider.
-// These are the standard endpoints that users should use when creating an OAuth app.
+// Delegates to the connector factory to get default OAuth config from the connector's OAuthHandler.
 func (r *ProviderRegistry) GetOAuthEndpoints(provider domain.ProviderType) *driving.OAuthEndpoints {
-	switch provider { //nolint:exhaustive // Local provider doesn't have OAuth endpoints
-	case domain.ProviderGitHub:
-		return &driving.OAuthEndpoints{
-			AuthURL:   "https://github.com/login/oauth/authorize",
-			TokenURL:  "https://github.com/login/oauth/access_token",
-			DeviceURL: "https://github.com/login/device/code",
-			Scopes:    []string{"repo", "read:user"},
-		}
-	case domain.ProviderGoogle:
-		return &driving.OAuthEndpoints{
-			AuthURL:   "https://accounts.google.com/o/oauth2/v2/auth",
-			TokenURL:  "https://oauth2.googleapis.com/token",
-			DeviceURL: "",
-			Scopes: []string{
-				// Non-sensitive scopes (for user identification)
-				"https://www.googleapis.com/auth/userinfo.email",
-				"https://www.googleapis.com/auth/userinfo.profile",
-				// Sensitive scopes
-				"https://www.googleapis.com/auth/calendar.readonly",
-				// Restricted scopes (OK for user-created internal apps)
-				"https://www.googleapis.com/auth/drive.readonly",
-				"https://www.googleapis.com/auth/gmail.readonly",
-			},
-		}
-	default:
+	if r.connectorRegistry == nil || r.connectorFactory == nil {
 		return nil
+	}
+
+	// Get any connector for this provider
+	connectors := r.connectorRegistry.GetConnectorsForProvider(provider)
+	if len(connectors) == 0 {
+		return nil
+	}
+
+	// Get OAuth defaults from the connector's OAuthHandler via the factory
+	defaults := r.connectorFactory.GetDefaultOAuthConfig(connectors[0].ID)
+	if defaults == nil {
+		return nil
+	}
+
+	return &driving.OAuthEndpoints{
+		AuthURL:  defaults.AuthURL,
+		TokenURL: defaults.TokenURL,
+		Scopes:   defaults.Scopes,
 	}
 }

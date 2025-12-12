@@ -101,8 +101,7 @@ func run() int {
 		log.Println("Run 'sercha settings wizard' to configure AI features.")
 	}
 
-	// Create provider registry early
-	providerRegistry := services.NewProviderRegistry()
+	// Provider registry is created after connector registry (see below)
 
 	// Create auth services (AuthProvider/Credentials architecture)
 	authProviderSvc := services.NewAuthProviderService(authProviderStore, sourceStore)
@@ -145,6 +144,9 @@ func run() int {
 	// Create connector registry (needed before sourceSvc.SetConnectorRegistry)
 	connectorRegistry := services.NewConnectorRegistry(connectorFactory)
 	sourceSvc.SetConnectorRegistry(connectorRegistry)
+
+	// Create provider registry (depends on connectorRegistry and connectorFactory)
+	providerRegistry := services.NewProviderRegistry(connectorRegistry, connectorFactory)
 
 	syncSvc := services.NewSyncOrchestrator(
 		sourceStore, syncStore, docStore, exclusionStore, connectorFactory, normaliserRegistry,

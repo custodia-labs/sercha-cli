@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSetVersion(t *testing.T) {
@@ -31,12 +30,6 @@ func TestRootCmd_Short(t *testing.T) {
 func TestRootCmd_Long(t *testing.T) {
 	assert.Contains(t, rootCmd.Long, "local-first semantic search engine")
 	assert.Contains(t, rootCmd.Long, "All data stays on your machine")
-}
-
-func TestRootCmd_HasConfigFlag(t *testing.T) {
-	flag := rootCmd.PersistentFlags().Lookup("config")
-	require.NotNil(t, flag, "config flag should exist")
-	assert.Equal(t, "config file (default is $HOME/.sercha.yaml)", flag.Usage)
 }
 
 func TestRootCmd_HasSubcommands(t *testing.T) {

@@ -160,8 +160,11 @@ func (c *Connector) runIncrementalSync(
 	}
 
 	cursor, err := DecodeCursor(state.Cursor)
-	if err != nil || cursor.IsEmpty() {
+	if err != nil {
 		return fmt.Errorf("invalid cursor, full sync required: %w", err)
+	}
+	if cursor.IsEmpty() {
+		return fmt.Errorf("invalid cursor, full sync required: cursor has no sync token")
 	}
 
 	ts := google.NewTokenSource(ctx, c.tokenProvider)

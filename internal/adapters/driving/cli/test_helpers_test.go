@@ -369,6 +369,20 @@ func (m *mockConnectorRegistry) GetSetupHint(_ string) string {
 	return ""
 }
 
+func (m *mockConnectorRegistry) GetConnectorsForProvider(provider domain.ProviderType) []domain.ConnectorType {
+	var result []domain.ConnectorType
+	for _, c := range m.List() {
+		if c.ProviderType == provider {
+			result = append(result, c)
+		}
+	}
+	return result
+}
+
+func (m *mockConnectorRegistry) ValidateConfig(_ string, _ map[string]string) error {
+	return nil
+}
+
 // mockConnectorRegistryEmpty implements driving.ConnectorRegistry that returns empty list.
 type mockConnectorRegistryEmpty struct{}
 
@@ -398,6 +412,14 @@ func (m *mockConnectorRegistryEmpty) GetUserInfo(_ context.Context, _ string, _ 
 
 func (m *mockConnectorRegistryEmpty) GetSetupHint(_ string) string {
 	return ""
+}
+
+func (m *mockConnectorRegistryEmpty) GetConnectorsForProvider(_ domain.ProviderType) []domain.ConnectorType {
+	return nil
+}
+
+func (m *mockConnectorRegistryEmpty) ValidateConfig(_ string, _ map[string]string) error {
+	return domain.ErrNotFound
 }
 
 // mockSearchServiceError implements driving.SearchService that returns errors.
