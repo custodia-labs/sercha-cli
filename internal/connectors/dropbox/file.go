@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/custodia-labs/sercha-cli/internal/core/domain"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
+
+	"github.com/custodia-labs/sercha-cli/internal/core/domain"
 )
 
 // FileToRawDocument converts a Dropbox FileMetadata to a RawDocument.

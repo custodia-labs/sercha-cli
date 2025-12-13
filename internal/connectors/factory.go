@@ -45,7 +45,13 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		oauthHandlers:        make(map[string]OAuthHandler),
 		tokenProviderFactory: tokenProviderFactory,
 	}
-	// Register default builders
+	f.registerDefaultBuilders()
+	f.registerOAuthHandlers()
+	return f
+}
+
+// registerDefaultBuilders registers all built-in connector builders.
+func (f *Factory) registerDefaultBuilders() {
 	f.Register("filesystem", func(source domain.Source, _ driven.TokenProvider) (driven.Connector, error) {
 		path, ok := source.Config["path"]
 		if !ok {
@@ -54,7 +60,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return filesystem.New(source.ID, path), nil
 	})
 
-	// Register GitHub connector
 	f.Register("github", func(source domain.Source, tokenProvider driven.TokenProvider) (driven.Connector, error) {
 		cfg, err := github.ParseConfig(source)
 		if err != nil {
@@ -63,7 +68,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return github.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register Google Drive connector
 	f.Register("google-drive", func(
 		source domain.Source, tokenProvider driven.TokenProvider,
 	) (driven.Connector, error) {
@@ -74,7 +78,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return drive.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register Gmail connector
 	f.Register("gmail", func(source domain.Source, tokenProvider driven.TokenProvider) (driven.Connector, error) {
 		cfg, err := gmail.ParseConfig(source)
 		if err != nil {
@@ -83,7 +86,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return gmail.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register Google Calendar connector
 	f.Register("google-calendar", func(
 		source domain.Source, tokenProvider driven.TokenProvider,
 	) (driven.Connector, error) {
@@ -94,7 +96,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return calendar.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register Outlook connector
 	f.Register("outlook", func(
 		source domain.Source, tokenProvider driven.TokenProvider,
 	) (driven.Connector, error) {
@@ -105,7 +106,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return outlook.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register OneDrive connector
 	f.Register("onedrive", func(
 		source domain.Source, tokenProvider driven.TokenProvider,
 	) (driven.Connector, error) {
@@ -116,7 +116,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return onedrive.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register Microsoft Calendar connector
 	f.Register("microsoft-calendar", func(
 		source domain.Source, tokenProvider driven.TokenProvider,
 	) (driven.Connector, error) {
@@ -127,20 +126,6 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		return mscalendar.New(source.ID, cfg, tokenProvider), nil
 	})
 
-	// Register OAuth handlers
-	googleOAuth := google.NewOAuthHandler()
-	f.RegisterOAuthHandler("google-drive", googleOAuth)
-	f.RegisterOAuthHandler("gmail", googleOAuth)
-	f.RegisterOAuthHandler("google-calendar", googleOAuth)
-	f.RegisterOAuthHandler("github", github.NewOAuthHandler())
-
-	// Microsoft OAuth handler for all Microsoft connectors
-	microsoftOAuth := microsoft.NewOAuthHandler()
-	f.RegisterOAuthHandler("outlook", microsoftOAuth)
-	f.RegisterOAuthHandler("onedrive", microsoftOAuth)
-	f.RegisterOAuthHandler("microsoft-calendar", microsoftOAuth)
-
-	// Register Dropbox connector
 	f.Register("dropbox", func(
 		source domain.Source, tokenProvider driven.TokenProvider,
 	) (driven.Connector, error) {
@@ -150,11 +135,27 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 		}
 		return dropbox.New(source.ID, cfg, tokenProvider), nil
 	})
+}
+
+// registerOAuthHandlers registers OAuth handlers for all connector types that support OAuth.
+func (f *Factory) registerOAuthHandlers() {
+	// Google OAuth handler for all Google connectors
+	googleOAuth := google.NewOAuthHandler()
+	f.RegisterOAuthHandler("google-drive", googleOAuth)
+	f.RegisterOAuthHandler("gmail", googleOAuth)
+	f.RegisterOAuthHandler("google-calendar", googleOAuth)
+
+	// GitHub OAuth handler
+	f.RegisterOAuthHandler("github", github.NewOAuthHandler())
+
+	// Microsoft OAuth handler for all Microsoft connectors
+	microsoftOAuth := microsoft.NewOAuthHandler()
+	f.RegisterOAuthHandler("outlook", microsoftOAuth)
+	f.RegisterOAuthHandler("onedrive", microsoftOAuth)
+	f.RegisterOAuthHandler("microsoft-calendar", microsoftOAuth)
 
 	// Dropbox OAuth handler
 	f.RegisterOAuthHandler("dropbox", dropbox.NewOAuthHandler())
-
-	return f
 }
 
 // Create instantiates a connector for the given source.

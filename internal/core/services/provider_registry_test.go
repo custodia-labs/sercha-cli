@@ -73,8 +73,8 @@ func TestProviderRegistry_GetProviders(t *testing.T) {
 
 	providers := registry.GetProviders()
 
-	// Should have local, google, github, microsoft (4 providers)
-	assert.Len(t, providers, 4)
+	// Should have local, google, github, microsoft, dropbox (5 providers)
+	assert.Len(t, providers, 5)
 
 	// Verify all expected providers are present
 	providerSet := make(map[domain.ProviderType]bool)
@@ -85,6 +85,7 @@ func TestProviderRegistry_GetProviders(t *testing.T) {
 	assert.True(t, providerSet[domain.ProviderGoogle])
 	assert.True(t, providerSet[domain.ProviderGitHub])
 	assert.True(t, providerSet[domain.ProviderMicrosoft])
+	assert.True(t, providerSet[domain.ProviderDropbox])
 }
 
 func TestProviderRegistry_GetConnectorsForProvider_Local(t *testing.T) {
@@ -341,6 +342,17 @@ func TestProviderRegistry_HasMultipleConnectors(t *testing.T) {
 
 func TestProviderRegistry_GetOAuthEndpoints(t *testing.T) {
 	// Create mock factory with OAuth defaults
+	// Include all connectors for each provider since map iteration order is random
+	googleDefaults := &driven.OAuthDefaults{
+		AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
+		TokenURL: "https://oauth2.googleapis.com/token",
+		Scopes:   []string{"drive.readonly"},
+	}
+	microsoftDefaults := &driven.OAuthDefaults{
+		AuthURL:  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
+		TokenURL: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+		Scopes:   []string{"Mail.Read"},
+	}
 	mockFactory := &mockConnectorFactoryForProvider{
 		oauthDefaults: map[string]*driven.OAuthDefaults{
 			"github": {
@@ -348,15 +360,19 @@ func TestProviderRegistry_GetOAuthEndpoints(t *testing.T) {
 				TokenURL: "https://github.com/login/oauth/access_token",
 				Scopes:   []string{"repo", "read:user"},
 			},
-			"google-drive": {
-				AuthURL:  "https://accounts.google.com/o/oauth2/v2/auth",
-				TokenURL: "https://oauth2.googleapis.com/token",
-				Scopes:   []string{"drive.readonly"},
-			},
-			"outlook": {
-				AuthURL:  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize",
-				TokenURL: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
-				Scopes:   []string{"Mail.Read"},
+			// Google connectors
+			"google-drive":    googleDefaults,
+			"gmail":           googleDefaults,
+			"google-calendar": googleDefaults,
+			// Microsoft connectors
+			"outlook":            microsoftDefaults,
+			"onedrive":           microsoftDefaults,
+			"microsoft-calendar": microsoftDefaults,
+			// Dropbox connector
+			"dropbox": {
+				AuthURL:  "https://www.dropbox.com/oauth2/authorize",
+				TokenURL: "https://api.dropboxapi.com/oauth2/token",
+				Scopes:   []string{"files.metadata.read", "files.content.read"},
 			},
 		},
 	}

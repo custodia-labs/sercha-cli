@@ -8,11 +8,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/custodia-labs/sercha-cli/internal/core/domain"
-	"github.com/custodia-labs/sercha-cli/internal/core/ports/driven"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/files"
 	"github.com/dropbox/dropbox-sdk-go-unofficial/v6/dropbox/users"
+
+	"github.com/custodia-labs/sercha-cli/internal/core/domain"
+	"github.com/custodia-labs/sercha-cli/internal/core/ports/driven"
 )
 
 // Ensure Connector implements the interface.
@@ -188,6 +189,8 @@ func (c *Connector) IncrementalSync(
 }
 
 // runIncrementalSync executes the incremental sync logic.
+//
+//nolint:gocognit // Sync logic requires handling pagination, rate limiting, and cursor management
 func (c *Connector) runIncrementalSync(
 	ctx context.Context, state domain.SyncState, changesChan chan<- domain.RawDocumentChange,
 ) error {
