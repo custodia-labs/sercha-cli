@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/custodia-labs/sercha-cli/internal/connectors/dropbox"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/filesystem"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/github"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google"
@@ -138,6 +139,20 @@ func NewFactory(tokenProviderFactory TokenProviderFactory) *Factory {
 	f.RegisterOAuthHandler("outlook", microsoftOAuth)
 	f.RegisterOAuthHandler("onedrive", microsoftOAuth)
 	f.RegisterOAuthHandler("microsoft-calendar", microsoftOAuth)
+
+	// Register Dropbox connector
+	f.Register("dropbox", func(
+		source domain.Source, tokenProvider driven.TokenProvider,
+	) (driven.Connector, error) {
+		cfg, err := dropbox.ParseConfig(source)
+		if err != nil {
+			return nil, fmt.Errorf("dropbox config: %w", err)
+		}
+		return dropbox.New(source.ID, cfg, tokenProvider), nil
+	})
+
+	// Dropbox OAuth handler
+	f.RegisterOAuthHandler("dropbox", dropbox.NewOAuthHandler())
 
 	return f
 }

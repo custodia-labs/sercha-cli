@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/custodia-labs/sercha-cli/internal/connectors/dropbox"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/filesystem"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/github"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/calendar"
@@ -44,6 +45,7 @@ func (r *ConnectorRegistry) registerBuiltinConnectors() {
 	r.registerOutlook()
 	r.registerOneDrive()
 	r.registerMicrosoftCalendar()
+	r.registerDropbox()
 }
 
 func (r *ConnectorRegistry) registerFilesystem() {
@@ -273,6 +275,40 @@ func msCalendarConfigKeys() []domain.ConfigKey {
 			Key:         "calendar_ids",
 			Label:       "Calendar IDs",
 			Description: "Specific calendar IDs to sync (optional)",
+		},
+	}
+}
+
+func (r *ConnectorRegistry) registerDropbox() {
+	r.connectors["dropbox"] = domain.ConnectorType{
+		ID:             "dropbox",
+		Name:           "Dropbox",
+		Description:    "Index files from Dropbox",
+		ProviderType:   domain.ProviderDropbox,
+		AuthCapability: domain.AuthCapOAuth,
+		AuthMethod:     domain.AuthMethodOAuth,
+		ConfigKeys:     dropboxConfigKeys(),
+		WebURLResolver: dropbox.ResolveWebURL,
+	}
+}
+
+func dropboxConfigKeys() []domain.ConfigKey {
+	return []domain.ConfigKey{
+		{
+			Key:         "folder_path",
+			Label:       "Folder Path",
+			Description: "Root folder path to sync (optional, defaults to root)",
+		},
+		{
+			Key:         "recursive",
+			Label:       "Recursive",
+			Description: "Include subfolders (true/false)",
+			Default:     "true",
+		},
+		{
+			Key:         "mime_types",
+			Label:       "MIME Types",
+			Description: "Filter by MIME types (optional)",
 		},
 	}
 }
