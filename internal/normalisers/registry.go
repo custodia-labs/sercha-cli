@@ -14,6 +14,7 @@ import (
 	"github.com/custodia-labs/sercha-cli/internal/normalisers/html"
 	"github.com/custodia-labs/sercha-cli/internal/normalisers/ics"
 	"github.com/custodia-labs/sercha-cli/internal/normalisers/markdown"
+	"github.com/custodia-labs/sercha-cli/internal/normalisers/notion"
 	"github.com/custodia-labs/sercha-cli/internal/normalisers/pdf"
 	"github.com/custodia-labs/sercha-cli/internal/normalisers/plaintext"
 )
@@ -46,6 +47,11 @@ func NewRegistry() *Registry {
 	// Register GitHub-specific normalisers
 	r.Register(github.NewIssue())
 	r.Register(github.NewPull())
+
+	// Register Notion-specific normalisers
+	r.Register(notion.NewPage())
+	r.Register(notion.NewDatabase())
+	r.Register(notion.NewDatabaseItem())
 
 	return r
 }

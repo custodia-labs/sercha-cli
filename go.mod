@@ -45,6 +45,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.7 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/jomei/notionapi v1.13.3 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect

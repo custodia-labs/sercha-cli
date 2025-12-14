@@ -6,6 +6,7 @@ import (
 	"github.com/custodia-labs/sercha-cli/internal/connectors/dropbox"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/filesystem"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/github"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/notion"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/calendar"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/drive"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/gmail"
@@ -46,6 +47,7 @@ func (r *ConnectorRegistry) registerBuiltinConnectors() {
 	r.registerOneDrive()
 	r.registerMicrosoftCalendar()
 	r.registerDropbox()
+	r.registerNotion()
 }
 
 func (r *ConnectorRegistry) registerFilesystem() {
@@ -313,6 +315,48 @@ func dropboxConfigKeys() []domain.ConfigKey {
 	}
 }
 
+func (r *ConnectorRegistry) registerNotion() {
+	r.connectors["notion"] = domain.ConnectorType{
+		ID:             "notion",
+		Name:           "Notion",
+		Description:    "Index pages and databases from Notion",
+		ProviderType:   domain.ProviderNotion,
+		AuthCapability: domain.AuthCapOAuth,
+		AuthMethod:     domain.AuthMethodOAuth,
+		ConfigKeys:     notionConfigKeys(),
+		WebURLResolver: notion.ResolveWebURL,
+	}
+}
+
+func notionConfigKeys() []domain.ConfigKey {
+	return []domain.ConfigKey{
+		{
+			Key:         "include_comments",
+			Label:       "Include Comments",
+			Description: "Fetch page comments (true/false)",
+			Default:     "true",
+		},
+		{
+			Key:         "content_types",
+			Label:       "Content Types",
+			Description: "Content to sync: pages,databases",
+			Default:     "pages,databases",
+		},
+		{
+			Key:         "max_block_depth",
+			Label:       "Max Block Depth",
+			Description: "Maximum depth for recursive block fetching",
+			Default:     "10",
+		},
+		{
+			Key:         "page_size",
+			Label:       "Page Size",
+			Description: "Items per API page (max: 100)",
+			Default:     "100",
+		},
+	}
+}
+
 // List returns all available connector types.
 func (r *ConnectorRegistry) List() []domain.ConnectorType {
 	result := make([]domain.ConnectorType, 0, len(r.connectors))
@@ -416,4 +460,17 @@ func (r *ConnectorRegistry) GetSetupHint(connectorType string) string {
 		return ""
 	}
 	return r.connectorFactory.GetSetupHint(connectorType)
+}
+
+// ExchangeCode exchanges an authorization code for tokens using connector-specific logic.
+func (r *ConnectorRegistry) ExchangeCode(
+	ctx context.Context,
+	connectorType string,
+	authProvider *domain.AuthProvider,
+	code, redirectURI, codeVerifier string,
+) (*domain.OAuthToken, error) {
+	if r.connectorFactory == nil {
+		return nil, domain.ErrNotFound
+	}
+	return r.connectorFactory.ExchangeCode(ctx, connectorType, authProvider, code, redirectURI, codeVerifier)
 }

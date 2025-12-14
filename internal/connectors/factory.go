@@ -8,6 +8,7 @@ import (
 	"github.com/custodia-labs/sercha-cli/internal/connectors/dropbox"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/filesystem"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/github"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/notion"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/calendar"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/drive"
@@ -135,6 +136,16 @@ func (f *Factory) registerDefaultBuilders() {
 		}
 		return dropbox.New(source.ID, cfg, tokenProvider), nil
 	})
+
+	f.Register("notion", func(
+		source domain.Source, tokenProvider driven.TokenProvider,
+	) (driven.Connector, error) {
+		cfg, err := notion.ParseConfig(source)
+		if err != nil {
+			return nil, fmt.Errorf("notion config: %w", err)
+		}
+		return notion.New(source.ID, cfg, tokenProvider), nil
+	})
 }
 
 // registerOAuthHandlers registers OAuth handlers for all connector types that support OAuth.
@@ -156,6 +167,9 @@ func (f *Factory) registerOAuthHandlers() {
 
 	// Dropbox OAuth handler
 	f.RegisterOAuthHandler("dropbox", dropbox.NewOAuthHandler())
+
+	// Notion OAuth handler
+	f.RegisterOAuthHandler("notion", notion.NewOAuthHandler())
 }
 
 // Create instantiates a connector for the given source.

@@ -52,4 +52,9 @@ type ConnectorRegistry interface {
 	// GetSetupHint returns guidance text for setting up OAuth/PAT with a provider.
 	// Returns empty string if no hint is available.
 	GetSetupHint(connectorType string) string
+
+	// ExchangeCode exchanges an authorization code for tokens using connector-specific logic.
+	// This allows connectors with non-standard OAuth (e.g., Notion requiring JSON body + Basic Auth)
+	// to implement their own token exchange while maintaining the factory abstraction.
+	ExchangeCode(ctx context.Context, connectorType string, authProvider *domain.AuthProvider, code, redirectURI, codeVerifier string) (*domain.OAuthToken, error)
 }

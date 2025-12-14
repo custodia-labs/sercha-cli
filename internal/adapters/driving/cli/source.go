@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
-	drivenoauth "github.com/custodia-labs/sercha-cli/internal/adapters/driven/oauth"
 	"github.com/custodia-labs/sercha-cli/internal/adapters/driving/oauth"
 	"github.com/custodia-labs/sercha-cli/internal/core/domain"
 )
@@ -676,12 +675,10 @@ func handleOAuthAuth(
 	// Run OAuth flow to get tokens
 	cmd.Println("\nStarting OAuth authentication...")
 
-	// Build OAuth2 config from AuthProvider
+	// Verify OAuth configuration exists
 	if authProvider.OAuth == nil {
 		return nil, errors.New("auth provider has no OAuth configuration")
 	}
-
-	oauthCfg := authProvider.OAuth
 
 	// Generate PKCE verifier and challenge
 	state := uuid.New().String()
@@ -719,11 +716,11 @@ func handleOAuthAuth(
 		return nil, fmt.Errorf("authorization failed: %w", err)
 	}
 
-	// Exchange code for tokens
+	// Exchange code for tokens via connector-specific handler
+	// This allows connectors like Notion to use their custom token exchange
 	cmd.Println("Exchanging authorization code for tokens...")
-	tokens, err := drivenoauth.ExchangeCodeForTokens(
-		ctx, oauthCfg.TokenURL, oauthCfg.ClientID, oauthCfg.ClientSecret,
-		code, callbackServer.RedirectURI(), codeVerifier,
+	tokens, err := connectorRegistry.ExchangeCode(
+		ctx, connector.ID, authProvider, code, callbackServer.RedirectURI(), codeVerifier,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to exchange code for tokens: %w", err)
