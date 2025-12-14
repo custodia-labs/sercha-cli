@@ -316,3 +316,90 @@ func TestMaxContentSize(t *testing.T) {
 	// Verify the constant is set correctly (5MB)
 	assert.Equal(t, 5*1024*1024, MaxContentSize)
 }
+
+func TestGetMIMETypeWithContent(t *testing.T) {
+	t.Run("extension takes priority over content detection", func(t *testing.T) {
+		// Even if content looks like HTML, .txt extension should win
+		htmlContent := []byte("<!DOCTYPE html><html><body>Test</body></html>")
+		result := getMIMETypeWithContent("file.txt", htmlContent)
+		assert.Equal(t, "text/plain", result)
+	})
+
+	t.Run("content detection for file without extension", func(t *testing.T) {
+		// Plain text content without extension
+		textContent := []byte("Hello, this is plain text content without any HTML tags.")
+		result := getMIMETypeWithContent("README", textContent)
+		// http.DetectContentType detects this as text/plain; charset=utf-8
+		assert.Contains(t, result, "text/plain")
+	})
+
+	t.Run("content detection for HTML without extension", func(t *testing.T) {
+		htmlContent := []byte("<!DOCTYPE html><html><head><title>Test</title></head><body>Test</body></html>")
+		result := getMIMETypeWithContent("document", htmlContent)
+		assert.Contains(t, result, "text/html")
+	})
+
+	t.Run("content detection for unknown extension", func(t *testing.T) {
+		textContent := []byte("This is some text content in a file with unknown extension.")
+		result := getMIMETypeWithContent("file.xyz123", textContent)
+		// Should detect as text
+		assert.Contains(t, result, "text/plain")
+	})
+
+	t.Run("no content and unknown extension returns octet-stream", func(t *testing.T) {
+		result := getMIMETypeWithContent("file.xyz123", nil)
+		assert.Equal(t, "application/octet-stream", result)
+	})
+
+	t.Run("empty content and unknown extension returns octet-stream", func(t *testing.T) {
+		result := getMIMETypeWithContent("file.xyz123", []byte{})
+		assert.Equal(t, "application/octet-stream", result)
+	})
+
+	t.Run("binary content detection", func(t *testing.T) {
+		// PNG magic bytes
+		pngContent := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
+		result := getMIMETypeWithContent("image", pngContent)
+		assert.Equal(t, "image/png", result)
+	})
+
+	t.Run("PDF content detection", func(t *testing.T) {
+		// PDF magic bytes
+		pdfContent := []byte("%PDF-1.4\n")
+		result := getMIMETypeWithContent("document", pdfContent)
+		assert.Equal(t, "application/pdf", result)
+	})
+}
+
+func TestFileToRawDocument_MIMEDetection(t *testing.T) {
+	modTime := time.Now()
+
+	t.Run("detects MIME from content when no extension", func(t *testing.T) {
+		file := newTestFileMetadata(
+			"id:noext",
+			"README",
+			"/README",
+			"/readme",
+			100,
+			modTime,
+		)
+		textContent := []byte("This is a README file with no extension")
+		doc := FileToRawDocument(file, textContent, "source-abc")
+		// Should detect text content
+		assert.Contains(t, doc.MIMEType, "text/plain")
+	})
+
+	t.Run("uses extension when available", func(t *testing.T) {
+		file := newTestFileMetadata(
+			"id:withext",
+			"script.py",
+			"/script.py",
+			"/script.py",
+			50,
+			modTime,
+		)
+		content := []byte("print('hello world')")
+		doc := FileToRawDocument(file, content, "source-abc")
+		assert.Equal(t, "text/x-python", doc.MIMEType)
+	})
+}

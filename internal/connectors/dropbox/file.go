@@ -2,6 +2,7 @@ package dropbox
 
 import (
 	"fmt"
+	"net/http"
 	"path"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ func FileToRawDocument(file *files.FileMetadata, content []byte, sourceID string
 	}
 
 	parentURI := buildParentURI(file)
-	mimeType := getMIMEType(file.Name)
+	mimeType := getMIMETypeWithContent(file.Name, content)
 
 	return &domain.RawDocument{
 		SourceID:  sourceID,
@@ -105,65 +106,83 @@ func shouldDownloadContent(mimeType string) bool {
 	return false
 }
 
+// mimeTypes maps file extensions to MIME types.
+var mimeTypes = map[string]string{
+	// Text files
+	".txt":  "text/plain",
+	".md":   "text/markdown",
+	".html": "text/html",
+	".htm":  "text/html",
+	".css":  "text/css",
+	".csv":  "text/csv",
+	".xml":  "application/xml",
+
+	// Code files
+	".js":   "application/javascript",
+	".ts":   "application/typescript",
+	".json": "application/json",
+	".yaml": "application/x-yaml",
+	".yml":  "application/x-yaml",
+	".py":   "text/x-python",
+	".go":   "text/x-go",
+	".java": "text/x-java",
+	".c":    "text/x-c",
+	".cpp":  "text/x-c++",
+	".h":    "text/x-c",
+	".hpp":  "text/x-c++",
+	".rs":   "text/x-rust",
+	".rb":   "text/x-ruby",
+	".php":  "text/x-php",
+	".sql":  "application/sql",
+	".sh":   "application/x-sh",
+
+	// Documents
+	".pdf":  "application/pdf",
+	".doc":  "application/msword",
+	".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	".xls":  "application/vnd.ms-excel",
+	".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	".ppt":  "application/vnd.ms-powerpoint",
+	".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+
+	// Images
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".png":  "image/png",
+	".gif":  "image/gif",
+	".svg":  "image/svg+xml",
+	".webp": "image/webp",
+
+	// Archives
+	".zip": "application/zip",
+	".tar": "application/x-tar",
+	".gz":  "application/gzip",
+}
+
 // getMIMEType guesses MIME type from file extension.
 // Dropbox API doesn't always provide MIME type so we infer from extension.
+// Use getMIMETypeWithContent when content is available for better detection.
 func getMIMEType(filename string) string {
 	ext := strings.ToLower(path.Ext(filename))
-
-	mimeTypes := map[string]string{
-		// Text files
-		".txt":  "text/plain",
-		".md":   "text/markdown",
-		".html": "text/html",
-		".htm":  "text/html",
-		".css":  "text/css",
-		".csv":  "text/csv",
-		".xml":  "application/xml",
-
-		// Code files
-		".js":   "application/javascript",
-		".ts":   "application/typescript",
-		".json": "application/json",
-		".yaml": "application/x-yaml",
-		".yml":  "application/x-yaml",
-		".py":   "text/x-python",
-		".go":   "text/x-go",
-		".java": "text/x-java",
-		".c":    "text/x-c",
-		".cpp":  "text/x-c++",
-		".h":    "text/x-c",
-		".hpp":  "text/x-c++",
-		".rs":   "text/x-rust",
-		".rb":   "text/x-ruby",
-		".php":  "text/x-php",
-		".sql":  "application/sql",
-		".sh":   "application/x-sh",
-
-		// Documents
-		".pdf":  "application/pdf",
-		".doc":  "application/msword",
-		".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-		".xls":  "application/vnd.ms-excel",
-		".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-		".ppt":  "application/vnd.ms-powerpoint",
-		".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-
-		// Images
-		".jpg":  "image/jpeg",
-		".jpeg": "image/jpeg",
-		".png":  "image/png",
-		".gif":  "image/gif",
-		".svg":  "image/svg+xml",
-		".webp": "image/webp",
-
-		// Archives
-		".zip": "application/zip",
-		".tar": "application/x-tar",
-		".gz":  "application/gzip",
-	}
-
 	if mimeType, ok := mimeTypes[ext]; ok {
 		return mimeType
+	}
+	return "application/octet-stream"
+}
+
+// getMIMETypeWithContent guesses MIME type, using content detection as fallback.
+// This provides better accuracy for files without extensions or with unknown extensions.
+func getMIMETypeWithContent(filename string, content []byte) string {
+	// First try extension-based lookup
+	ext := strings.ToLower(path.Ext(filename))
+	if mimeType, ok := mimeTypes[ext]; ok {
+		return mimeType
+	}
+
+	// No extension match - try content detection if we have content
+	if len(content) > 0 {
+		detected := http.DetectContentType(content)
+		return detected
 	}
 
 	return "application/octet-stream"

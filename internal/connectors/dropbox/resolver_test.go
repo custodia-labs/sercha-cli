@@ -14,6 +14,25 @@ func TestResolveWebURL(t *testing.T) {
 		expected string
 	}{
 		{
+			name: "preview_url takes highest priority",
+			uri:  "dropbox://files/id:abc123",
+			metadata: map[string]any{
+				"preview_url": "https://www.dropbox.com/scl/fi/xyz/preview.pdf?dl=0",
+				"path":        "/Documents/report.pdf",
+				"file_id":     "id:abc123",
+			},
+			expected: "https://www.dropbox.com/scl/fi/xyz/preview.pdf?dl=0",
+		},
+		{
+			name: "empty preview_url falls back to path",
+			uri:  "dropbox://files/id:abc123",
+			metadata: map[string]any{
+				"preview_url": "",
+				"path":        "/Documents/report.pdf",
+			},
+			expected: "https://www.dropbox.com/home/Documents%2Freport.pdf",
+		},
+		{
 			name: "with path metadata",
 			uri:  "dropbox://files/id:abc123",
 			metadata: map[string]any{
