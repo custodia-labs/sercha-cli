@@ -71,17 +71,15 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --clean --split
+          args: release --clean --split --id linux-amd64
         env:
-          GOOS: linux
-          GOARCH: amd64
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-linux
-          path: dist/linux
+          name: dist-linux-amd64
+          path: dist/linux_amd64
           retention-days: 1
 
   build-linux-arm64:
@@ -114,17 +112,15 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --clean --split
+          args: release --clean --split --id linux-arm64
         env:
-          GOOS: linux
-          GOARCH: arm64
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
 
       - name: Upload Linux ARM64 artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-linux-arm64
-          path: dist/linux-arm64
+          path: dist/linux_arm64
           retention-days: 1
 
   build-macos:
@@ -155,17 +151,15 @@ jobs:
         with:
           distribution: goreleaser-pro
           version: "~> v2"
-          args: release --clean --split
+          args: release --clean --split --id darwin-arm64
         env:
-          GOOS: darwin
-          GOARCH: arm64
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist-darwin
-          path: dist/darwin
+          name: dist-darwin-arm64
+          path: dist/darwin_arm64
           retention-days: 1
 
   release:
@@ -182,23 +176,23 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: Download Linux artifacts
+      - name: Download Linux amd64 artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist-linux
-          path: dist/linux
+          name: dist-linux-amd64
+          path: dist/linux_amd64
 
       - name: Download Linux ARM64 artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist-linux-arm64
-          path: dist/linux-arm64
+          path: dist/linux_arm64
 
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
-          name: dist-darwin
-          path: dist/darwin
+          name: dist-darwin-arm64
+          path: dist/darwin_arm64
 
       - name: Install Cloudsmith CLI
         run: |

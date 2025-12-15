@@ -5,6 +5,9 @@ project_name: sercha
 env:
   - CGO_ENABLED=1
 
+partial:
+  by: target
+
 before:
   hooks:
     - go mod tidy
