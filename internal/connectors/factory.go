@@ -8,7 +8,6 @@ import (
 	"github.com/custodia-labs/sercha-cli/internal/connectors/dropbox"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/filesystem"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/github"
-	"github.com/custodia-labs/sercha-cli/internal/connectors/notion"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/calendar"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/google/drive"
@@ -17,6 +16,7 @@ import (
 	mscalendar "github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/calendar"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/onedrive"
 	"github.com/custodia-labs/sercha-cli/internal/connectors/microsoft/outlook"
+	"github.com/custodia-labs/sercha-cli/internal/connectors/notion"
 	"github.com/custodia-labs/sercha-cli/internal/core/domain"
 	"github.com/custodia-labs/sercha-cli/internal/core/ports/driven"
 )

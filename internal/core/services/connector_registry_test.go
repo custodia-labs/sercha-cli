@@ -70,8 +70,8 @@ func TestConnectorRegistry_List(t *testing.T) {
 	connectors := registry.List()
 
 	// All built-in connectors: filesystem, github, google-drive, gmail, google-calendar,
-	// outlook, onedrive, microsoft-calendar, dropbox
-	assert.Len(t, connectors, 9)
+	// outlook, onedrive, microsoft-calendar, dropbox, notion
+	assert.Len(t, connectors, 10)
 
 	// Verify all expected connectors are present
 	ids := make(map[string]bool)
@@ -87,6 +87,7 @@ func TestConnectorRegistry_List(t *testing.T) {
 	assert.True(t, ids["onedrive"])
 	assert.True(t, ids["microsoft-calendar"])
 	assert.True(t, ids["dropbox"])
+	assert.True(t, ids["notion"])
 }
 
 func TestConnectorRegistry_Get_Filesystem(t *testing.T) {

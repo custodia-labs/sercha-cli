@@ -383,6 +383,10 @@ func (m *mockConnectorRegistry) ValidateConfig(_ string, _ map[string]string) er
 	return nil
 }
 
+func (m *mockConnectorRegistry) ExchangeCode(_ context.Context, _ string, _ *domain.AuthProvider, _, _, _ string) (*domain.OAuthToken, error) {
+	return nil, nil
+}
+
 // mockConnectorRegistryEmpty implements driving.ConnectorRegistry that returns empty list.
 type mockConnectorRegistryEmpty struct{}
 
@@ -420,6 +424,10 @@ func (m *mockConnectorRegistryEmpty) GetConnectorsForProvider(_ domain.ProviderT
 
 func (m *mockConnectorRegistryEmpty) ValidateConfig(_ string, _ map[string]string) error {
 	return domain.ErrNotFound
+}
+
+func (m *mockConnectorRegistryEmpty) ExchangeCode(_ context.Context, _ string, _ *domain.AuthProvider, _, _, _ string) (*domain.OAuthToken, error) {
+	return nil, domain.ErrNotFound
 }
 
 // mockSearchServiceError implements driving.SearchService that returns errors.

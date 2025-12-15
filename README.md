@@ -66,7 +66,7 @@ Sercha CLI is a powerful, privacy-focused search tool designed for local environ
 **Why Sercha?**
 * **Privacy First**: All searches happen locally on your machine - your data never leaves your control
 * **Fast & Efficient**: Optimized for speed with CGO-enabled performance
-* **Cross-Platform**: Native builds for macOS (Intel & Apple Silicon), Linux (x86_64 & ARM64)
+* **Cross-Platform**: Native builds for macOS (Apple Silicon) and Linux (x86_64 & ARM64)
 * **Easy Installation**: Multiple installation methods including Homebrew, apt, yum, and direct binaries
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -126,9 +126,8 @@ sudo yum install -y sercha
 Download the latest release for your platform from [GitHub Releases][release-url]:
 
 - **macOS (Apple Silicon)**: `sercha_*_darwin_arm64.tar.gz`
-- **macOS (Intel)**: `sercha_*_darwin_amd64.tar.gz`
-- **Linux (ARM64)**: `sercha_*_linux_arm64.tar.gz`
 - **Linux (x86_64)**: `sercha_*_linux_amd64.tar.gz`
+- **Linux (ARM64)**: `sercha_*_linux_arm64.tar.gz`
 
 **Note**: Binary downloads require Xapian to be installed manually:
 - macOS: `brew install xapian`

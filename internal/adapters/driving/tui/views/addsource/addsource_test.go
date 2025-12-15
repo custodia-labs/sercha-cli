@@ -174,6 +174,10 @@ func (m *MockConnectorRegistry) GetConnectorsForProvider(provider domain.Provide
 	return result
 }
 
+func (m *MockConnectorRegistry) ExchangeCode(_ context.Context, _ string, _ *domain.AuthProvider, _, _, _ string) (*domain.OAuthToken, error) {
+	return nil, nil
+}
+
 // MockCredentialsService implements driving.CredentialsService for testing.
 type MockCredentialsService struct {
 	SaveFunc          func(ctx context.Context, creds domain.Credentials) error

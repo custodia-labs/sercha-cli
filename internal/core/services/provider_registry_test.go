@@ -73,8 +73,8 @@ func TestProviderRegistry_GetProviders(t *testing.T) {
 
 	providers := registry.GetProviders()
 
-	// Should have local, google, github, microsoft, dropbox (5 providers)
-	assert.Len(t, providers, 5)
+	// Should have local, google, github, microsoft, dropbox, notion (6 providers)
+	assert.Len(t, providers, 6)
 
 	// Verify all expected providers are present
 	providerSet := make(map[domain.ProviderType]bool)
@@ -86,6 +86,7 @@ func TestProviderRegistry_GetProviders(t *testing.T) {
 	assert.True(t, providerSet[domain.ProviderGitHub])
 	assert.True(t, providerSet[domain.ProviderMicrosoft])
 	assert.True(t, providerSet[domain.ProviderDropbox])
+	assert.True(t, providerSet[domain.ProviderNotion])
 }
 
 func TestProviderRegistry_GetConnectorsForProvider_Local(t *testing.T) {

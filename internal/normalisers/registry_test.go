@@ -56,7 +56,7 @@ func TestNewRegistry(t *testing.T) {
 
 	// Verify default normalisers are registered
 	assert.NotEmpty(t, registry.normalisers, "registry should have default normalisers")
-	assert.Equal(t, 9, len(registry.normalisers), "should have 9 default normalisers (docx, eml, html, ics, markdown, pdf, plaintext, github-issue, github-pull)")
+	assert.Equal(t, 12, len(registry.normalisers), "should have 12 default normalisers (docx, eml, html, ics, markdown, pdf, plaintext, github-issue, github-pull, notion-page, notion-database, notion-database-item)")
 
 	// Verify MIME types are indexed
 	supportedTypes := registry.SupportedMIMETypes()
