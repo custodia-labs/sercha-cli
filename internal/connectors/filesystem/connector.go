@@ -31,8 +31,58 @@ type Connector struct {
 	closed   bool
 }
 
-// New creates a new filesystem connector.
 func New(sourceID, rootPath string) *Connector {
+	// Reject empty / whitespace-only paths
+	if strings.TrimSpace(rootPath) == "" {
+		fmt.Println("Error: filesystem connector root path is empty.")
+		fmt.Println("Please provide a valid directory path and retry.")
+
+		return &Connector{
+			sourceID: sourceID,
+			rootPath: "",
+		}
+	}
+
+	// Expand "~" to home directory
+	if rootPath == "~" {
+		if home, err := os.UserHomeDir(); err == nil {
+			rootPath = home
+		} else {
+			fmt.Println("Error: failed to resolve home directory.")
+			fmt.Println("Please retry with an explicit path.")
+
+			return &Connector{
+				sourceID: sourceID,
+				rootPath: "",
+			}
+		}
+	} else if strings.HasPrefix(rootPath, "~/") {
+		if home, err := os.UserHomeDir(); err == nil {
+			rootPath = filepath.Join(home, rootPath[2:])
+		} else {
+			fmt.Println("Error: failed to resolve home directory.")
+			fmt.Println("Please retry with an explicit path.")
+
+			return &Connector{
+				sourceID: sourceID,
+				rootPath: "",
+			}
+		}
+	}
+
+	// Convert to absolute path and clean
+	if absPath, err := filepath.Abs(rootPath); err == nil {
+		rootPath = filepath.Clean(absPath)
+	} else {
+		fmt.Printf("Error: invalid root path %q\n", rootPath)
+		fmt.Println("Please provide a valid directory path and retry.")
+
+		return &Connector{
+			sourceID: sourceID,
+			rootPath: "",
+		}
+	}
+
 	return &Connector{
 		sourceID: sourceID,
 		rootPath: rootPath,
@@ -85,6 +135,7 @@ func (c *Connector) Validate(ctx context.Context) error {
 	}
 
 	// Verify root path exists
+	fmt.Print(c.rootPath)
 	info, err := os.Stat(c.rootPath)
 	if err != nil {
 		if os.IsNotExist(err) {
