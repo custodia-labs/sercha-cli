@@ -31,11 +31,44 @@ type Connector struct {
 	closed   bool
 }
 
-// New creates a new filesystem connector.
 func New(sourceID, rootPath string) *Connector {
+	fail := func(msg string) *Connector {
+		fmt.Println("Error:", msg)
+		fmt.Println("Please provide a valid directory path and retry.")
+		return &Connector{
+			sourceID: sourceID,
+			rootPath: "",
+		}
+	}
+
+	rootPath = strings.TrimSpace(rootPath)
+	if rootPath == "" {
+		return fail("filesystem connector root path is empty")
+	}
+
+	// Expand "~"
+	if rootPath == "~" || strings.HasPrefix(rootPath, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fail("failed to resolve home directory")
+		}
+
+		if rootPath == "~" {
+			rootPath = home
+		} else {
+			rootPath = filepath.Join(home, rootPath[2:])
+		}
+	}
+
+	// Convert to absolute path and clean
+	absPath, err := filepath.Abs(rootPath)
+	if err != nil {
+		return fail(fmt.Sprintf("invalid root path %q", rootPath))
+	}
+
 	return &Connector{
 		sourceID: sourceID,
-		rootPath: rootPath,
+		rootPath: filepath.Clean(absPath),
 	}
 }
 
@@ -85,6 +118,7 @@ func (c *Connector) Validate(ctx context.Context) error {
 	}
 
 	// Verify root path exists
+	fmt.Print(c.rootPath)
 	info, err := os.Stat(c.rootPath)
 	if err != nil {
 		if os.IsNotExist(err) {
