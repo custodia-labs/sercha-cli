@@ -466,6 +466,16 @@ func (v *View) View() string {
 func (v *View) renderOverview() string {
 	var b strings.Builder
 
+	embeddingValue := "Not Set"
+	if v.settings.Embedding.Provider != "" {
+		embeddingValue = fmt.Sprintf("%s (%s)", v.settings.Embedding.Provider.Description(), v.settings.Embedding.Model)
+	}
+
+	llmValue := "Not Set"
+	if v.settings.LLM.Provider != "" {
+		llmValue = fmt.Sprintf("%s (%s)", v.settings.LLM.Provider.Description(), v.settings.LLM.Model)
+	}
+
 	items := []struct {
 		label  string
 		value  string
@@ -477,12 +487,12 @@ func (v *View) renderOverview() string {
 		},
 		{
 			label:  "Embedding Provider",
-			value:  fmt.Sprintf("%s (%s)", v.settings.Embedding.Provider.Description(), v.settings.Embedding.Model),
+			value:  embeddingValue,
 			status: v.getEmbeddingStatus(),
 		},
 		{
 			label:  "LLM Provider",
-			value:  fmt.Sprintf("%s (%s)", v.settings.LLM.Provider.Description(), v.settings.LLM.Model),
+			value:  llmValue,
 			status: v.getLLMStatus(),
 		},
 	}
